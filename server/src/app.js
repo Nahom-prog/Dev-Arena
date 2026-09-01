@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import quizRoutes from "./routes/quiz.routes.js";
-import questionRoutes from "./routes/question.routes.js"
+import questionRoutes from "./routes/question.routes.js";
+import leaderboardRoutes from "./routes/leaderboard.routes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/quizzes", quizRoutes);
-app.use("/api/questions", questionRoutes)
+app.use("/api/questions", questionRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
-export default app;
+export default app;

@@ -2,150 +2,219 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { quizApi } from '../services/api';
 
-const SAMPLE_QUIZZES = [
+const SAMPLE_DEV_QUIZZES = [
   {
     _id: 'sample-1',
-    title: 'Full-Stack JavaScript & Node.js Engine',
-    description: 'Master Express middleware, event loop internals, asynchronous streams, and REST API design patterns.',
-    timeLimitMinutes: 12,
-    category: 'Backend',
+    title: 'Full-Stack JavaScript & Node.js Internals',
+    description: 'Event loop execution phases, microtask queues, stream pipelines, and memory optimization.',
+    timeLimitMinutes: 10,
+    tags: ['JavaScript', 'Node.js'],
+    difficulty: 'mid',
+    creatorName: 'Nahom (Lead Architect)',
+    playsCount: 42,
     status: 'published',
   },
   {
     _id: 'sample-2',
-    title: 'React Architecture & State Mastery',
-    description: 'Deep dive into component lifecycle, custom hooks, context performance, and fiber reconciliation.',
-    timeLimitMinutes: 15,
-    category: 'Frontend',
+    title: 'React 19 Hooks & Concurrency Battle',
+    description: 'Fiber reconciliation, Suspense boundaries, custom hook memoization, and server actions.',
+    timeLimitMinutes: 12,
+    tags: ['React', 'Frontend'],
+    difficulty: 'hard',
+    creatorName: 'Sarah Lin',
+    playsCount: 28,
     status: 'published',
   },
   {
     _id: 'sample-3',
-    title: 'Data Structures & Algorithmic Thinking',
-    description: 'Solve complexity questions, binary trees, recursion patterns, hash tables, and dynamic programming.',
-    timeLimitMinutes: 20,
-    category: 'Algorithms',
+    title: 'TypeScript Type Gymnastics & Generics',
+    description: 'Conditional types, mapped utility types, template literal inferences, and covariance/contravariance.',
+    timeLimitMinutes: 15,
+    tags: ['TypeScript'],
+    difficulty: 'very hard',
+    creatorName: 'Alex R.',
+    playsCount: 19,
     status: 'published',
   },
   {
     _id: 'sample-4',
-    title: 'Modern CSS, Grid & Layout Systems',
-    description: 'Test your understanding of flexbox models, subgrid, container queries, CSS variables, and fluid typography.',
-    timeLimitMinutes: 10,
-    category: 'Design',
+    title: 'Data Structures & Big-O Quick Fire',
+    description: 'Binary trees, hash table collisions, sliding windows, and amortized runtime calculations.',
+    timeLimitMinutes: 8,
+    tags: ['Algorithms'],
+    difficulty: 'easy',
+    creatorName: 'Dev Arena Bot',
+    playsCount: 76,
     status: 'published',
   },
 ];
 
+const DIFFICULTY_MAP = {
+  easy: { label: 'EASY (1.0x XP)', badgeClass: 'badge-lime' },
+  mid: { label: 'MID (1.25x XP)', badgeClass: 'badge-emerald' },
+  hard: { label: 'HARD (1.5x XP)', badgeClass: 'badge-amber' },
+  'very hard': { label: 'VERY HARD (2.0x XP)', badgeClass: 'badge-rose' },
+};
+
 export default function QuizzesList() {
   const [quizzes, setQuizzes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeTag, setActiveTag] = useState('all');
+  const [activeDifficulty, setActiveDifficulty] = useState('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
         setLoading(true);
-        const res = await quizApi.getAllQuizzes();
+        const res = await quizApi.getAllQuizzes({
+          tag: activeTag,
+          difficulty: activeDifficulty,
+          search: searchTerm,
+        });
         const serverQuizzes = res.quizzes || [];
-        setQuizzes(serverQuizzes.length > 0 ? serverQuizzes : SAMPLE_QUIZZES);
+        setQuizzes(serverQuizzes.length > 0 ? serverQuizzes : SAMPLE_DEV_QUIZZES);
       } catch (err) {
-        console.warn('Using local fallback catalog', err);
-        setQuizzes(SAMPLE_QUIZZES);
+        console.warn('Using fallback catalog', err);
+        setQuizzes(SAMPLE_DEV_QUIZZES);
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuizzes();
-  }, []);
+  }, [activeTag, activeDifficulty, searchTerm]);
 
-  const filteredQuizzes = quizzes.filter((quiz) => {
-    const matchesSearch =
-      quiz.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quiz.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const tagsList = ['all', 'JavaScript', 'React', 'TypeScript', 'Node.js', 'Algorithms', 'Frontend'];
+  const difficultyList = ['all', 'easy', 'mid', 'hard', 'very hard'];
 
   return (
     <div className="quizzes-page wrap" style={{ padding: '50px 0' }}>
       <div className="section-label">
         <div>
-          <span className="eyebrow lime">ASSESSMENT CATALOG</span>
-          <h2>Live Evaluation Library</h2>
+          <span className="eyebrow lime">ARENA CHALLENGES</span>
+          <h2>Developer Battlegrounds & Quizzes</h2>
         </div>
-        <span>Select any assessment to launch the live countdown exam chamber.</span>
+        <span>Select any track to test your knowledge, grind XP, and climb the leaderboard.</span>
       </div>
 
-      {/* Filter Bar */}
-      <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-        <div style={{ flex: 1, minWidth: '280px', maxWidth: '540px' }}>
-          <input
-            type="text"
-            placeholder="Search by topic, framework, or keywords..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field"
-          />
+      {/* Filter and Search Bar */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '36px' }}>
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: '280px' }}>
+            <input
+              type="text"
+              placeholder="Search challenges by keyword, tag, or topic..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field"
+            />
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {['all', 'Frontend', 'Backend', 'Algorithms', 'Design'].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={`btn btn-sm ${activeCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {cat === 'all' ? 'All Tracks' : cat}
-            </button>
-          ))}
+        {/* Tags & Difficulty Filter Tabs */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginRight: '6px' }}>
+              TECH:
+            </span>
+            {tagsList.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className={`btn btn-sm ${activeTag === tag ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 12px', fontSize: '0.78rem' }}
+                onClick={() => setActiveTag(tag)}
+              >
+                {tag === 'all' ? 'All Stacks' : tag}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginRight: '6px' }}>
+              TIER:
+            </span>
+            {difficultyList.map((diff) => (
+              <button
+                key={diff}
+                type="button"
+                className={`btn btn-sm ${activeDifficulty === diff ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 10px', fontSize: '0.76rem', textTransform: 'capitalize' }}
+                onClick={() => setActiveDifficulty(diff)}
+              >
+                {diff}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Quiz Grid */}
+      {/* Quiz Cards Grid */}
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
-          <span className="mono" style={{ color: 'var(--lime)' }}>Loading assessment library...</span>
+          <span className="mono" style={{ color: 'var(--lime)' }}>⚡ Loading Arena Challenges...</span>
         </div>
-      ) : filteredQuizzes.length === 0 ? (
+      ) : quizzes.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
-          <h3>No matching assessments found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search criteria.</p>
+          <h3>No matching challenges found</h3>
+          <p style={{ color: 'var(--text-muted)' }}>Try broadening your filter criteria or search query.</p>
         </div>
       ) : (
         <div className="grid-2">
-          {filteredQuizzes.map((quiz) => (
-            <article
-              key={quiz._id}
-              className="card card-interactive"
-              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '220px' }}
-            >
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <span className="badge badge-lime">⏱ {quiz.timeLimitMinutes || 10} MINS</span>
-                  <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                    {quiz.status === 'published' ? '● LIVE TEST' : 'DRAFT'}
-                  </span>
+          {quizzes.map((quiz) => {
+            const diffInfo = DIFFICULTY_MAP[quiz.difficulty] || DIFFICULTY_MAP.easy;
+            const tags = quiz.tags && quiz.tags.length > 0 ? quiz.tags : ['JavaScript'];
+
+            return (
+              <article
+                key={quiz._id}
+                className="card card-interactive"
+                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '230px' }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <span className={`badge ${diffInfo.badgeClass}`} style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
+                        {diffInfo.label}
+                      </span>
+                      <span className="badge" style={{ fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)' }}>
+                        ⏱ {quiz.timeLimitMinutes || 10}m
+                      </span>
+                    </div>
+                    <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                      👥 {quiz.playsCount || 0} plays
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: '1.3rem', margin: '0 0 8px' }}>{quiz.title}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: '1.5', marginBottom: '14px' }}>
+                    {quiz.description || 'Challenge designed to evaluate core software principles.'}
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {tags.map((t, idx) => (
+                      <span key={idx} className="mono" style={{ fontSize: '0.72rem', color: 'var(--lime)', background: 'rgba(200,255,55,0.08)', padding: '2px 8px', borderRadius: '3px' }}>
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                <h3 style={{ fontSize: '1.35rem', margin: '0 0 8px' }}>{quiz.title}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  {quiz.description || 'Comprehensive evaluation test designed to measure fundamental principles.'}
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)' }}>★ 150+ XP</span>
-                <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm">
-                  Start Assessment ↗
-                </Link>
-              </div>
-            </article>
-          ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                  <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                    Author: <span style={{ color: 'var(--text)' }}>{quiz.creatorName || quiz.teacherId?.name || 'Dev Contributor'}</span>
+                  </span>
+                  <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm">
+                    Enter Arena ⚔️
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+

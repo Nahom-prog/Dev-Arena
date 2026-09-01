@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { quizApi, questionApi } from '../services/api';
 import CircularTimer from '../components/CircularTimer';
+import FormattedQuestion from '../components/FormattedQuestion';
+import { playCorrectSound } from '../utils/soundEffects';
 
 const FALLBACK_QUESTIONS = [
   {
@@ -69,6 +71,7 @@ export default function ExamRoom() {
   }, [quizId]);
 
   const handleSelectOption = (qId, option) => {
+    playCorrectSound();
     setAnswers((prev) => ({ ...prev, [qId]: option }));
   };
 
@@ -207,12 +210,18 @@ export default function ExamRoom() {
             </span>
           </div>
 
-          <h3 className="exam-q-prompt">{currentQ?.question}</h3>
+          <FormattedQuestion
+            text={currentQ?.question}
+            codeSnippet={currentQ?.codeSnippet}
+            language={currentQ?.language || 'javascript'}
+          />
 
           {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '36px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '36px', marginTop: '20px' }}>
             {currentQ?.options?.map((opt, idx) => {
               const isSelected = currentSelected === opt;
+              const isCodeLike = opt.includes('`') || opt.includes('(') || opt.includes('=>') || opt.includes('{');
+
               return (
                 <button
                   key={idx}
@@ -221,7 +230,14 @@ export default function ExamRoom() {
                   onClick={() => handleSelectOption(currentQ._id, opt)}
                 >
                   <span className="exam-opt-badge">{String.fromCharCode(65 + idx)}</span>
-                  <span style={{ fontSize: '0.94rem' }}>{opt}</span>
+                  <span
+                    style={{
+                      fontSize: '0.94rem',
+                      fontFamily: isCodeLike ? '"DM Mono", monospace' : 'inherit',
+                    }}
+                  >
+                    {opt}
+                  </span>
                 </button>
               );
             })}

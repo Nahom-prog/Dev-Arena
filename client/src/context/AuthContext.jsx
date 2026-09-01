@@ -35,6 +35,21 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
+  const refreshUser = useCallback(async () => {
+    const storedToken = localStorage.getItem('quiz_token');
+    if (storedToken) {
+      try {
+        const profile = await authApi.getMe();
+        setUser(profile);
+        localStorage.setItem('quiz_user', JSON.stringify(profile));
+        return profile;
+      } catch (err) {
+        console.error('Failed to refresh user profile', err);
+      }
+    }
+    return null;
+  }, []);
+
   useEffect(() => {
     const verifyUser = async () => {
       const storedToken = localStorage.getItem('quiz_token');
@@ -54,6 +69,14 @@ export function AuthProvider({ children }) {
     verifyUser();
   }, [logout]);
 
+  const canCreateQuiz =
+    !!user &&
+    ((user.level || 1) >= 3 ||
+      (user.quizzesTaken || 0) >= 3 ||
+      user.role === 'admin' ||
+      user.role === 'teacher' ||
+      user.canCreateQuiz);
+
   return (
     <AuthContext.Provider
       value={{
@@ -63,12 +86,15 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        refreshUser,
         isAuthenticated: !!token && !!user,
-        isTeacher: user?.role === 'teacher',
-        isStudent: user?.role === 'student',
+        canCreateQuiz,
+        isTeacher: user?.role === 'teacher' || user?.role === 'admin',
+        isStudent: user?.role === 'student' || user?.role === 'developer',
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
+

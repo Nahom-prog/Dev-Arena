@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -22,39 +23,38 @@ export default function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="app-container">
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              {/* Public Pages */}
-              <Route path="/" element={<ExploreHome />} />
-              <Route path="/quizzes" element={<QuizzesList />} />
-              <Route path="/practice" element={<QuickPractice />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <ToastProvider>
+          <div className="app-container">
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                {/* Public Pages */}
+                <Route path="/" element={<ExploreHome />} />
+                <Route path="/quizzes" element={<QuizzesList />} />
+                <Route path="/practice" element={<QuickPractice />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* Authenticated Pages */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/quiz/:quizId" element={<ExamRoom />} />
-                <Route path="/quiz/:quizId/result" element={<DetailedResult />} />
-              </Route>
+                {/* Authenticated Dev Pages */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/quiz/:quizId" element={<ExamRoom />} />
+                  <Route path="/quiz/:quizId/result" element={<DetailedResult />} />
+                  <Route path="/studio" element={<TeacherDashboard />} />
+                  <Route path="/create-quiz" element={<TeacherCreate />} />
+                  <Route path="/quiz/:quizId/edit" element={<TeacherManage />} />
+                </Route>
 
-              {/* Educator Studio Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
-                <Route path="/studio" element={<TeacherDashboard />} />
-                <Route path="/create-quiz" element={<TeacherCreate />} />
-                <Route path="/quiz/:quizId/edit" element={<TeacherManage />} />
-              </Route>
-
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );
 }
+

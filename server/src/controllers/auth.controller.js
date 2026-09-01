@@ -6,7 +6,7 @@ const createToken = (user) => {
   return jwt.sign(
     { id: user._id.toString(), email: user.email, role: user.role },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "7d" }
   );
 };
 
@@ -14,13 +14,13 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (!["teacher", "student"].includes(role)) {
-      return res.status(400).json({ message: "Role must be teacher or student" });
-    }
+    const assignedRole = role && ["developer", "teacher", "student", "admin"].includes(role)
+      ? role
+      : "developer";
 
     const normalizedEmail = email.toLowerCase();
 
@@ -35,7 +35,7 @@ export const register = async (req, res) => {
       name,
       email: normalizedEmail,
       passwordHash,
-      role,
+      role: assignedRole,
     });
 
     const token = createToken(newUser);
@@ -48,10 +48,17 @@ export const register = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        xp: newUser.xp,
+        level: newUser.level,
+        streak: newUser.streak,
+        quizzesTaken: newUser.quizzesTaken,
+        quizzesCreated: newUser.quizzesCreated,
+        badges: newUser.badges,
+        canCreateQuiz: false,
       },
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -72,27 +79,79 @@ export const login = async (req, res) => {
 
     const token = createToken(user);
 
+    const canCreateQuiz =
+      (user.level || 1) >= 3 ||
+      (user.quizzesTaken || 0) >= 3 ||
+      user.role === "admin" ||
+      user.role === "teacher";
+
     return res.json({
       message: "Login successful",
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        xp: user.xp || 0,
+        level: user.level || 1,
+        streak: user.streak || 1,
+        quizzesTaken: user.quizzesTaken || 0,
+        quizzesCreated: user.quizzesCreated || 0,
+        badges: user.badges || [],
+        canCreateQuiz,
+      },
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 export const me = async (req, res) => {
-  const user = await User.findById(req.user.id).select("-passwordHash");
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
+  try {
+    const user = await User.findById(req.user.id).select("-passwordHash");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  return res.json({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  });
+    // Calculate dynamic global rank
+    const higherXpCount = await User.countDocuments({ xp: { $gt: user.xp || 0 } });
+    const rank = higherXpCount + 1;
+
+    // Calculate accuracy percentage
+    const accuracy =
+      user.totalQuestionsAttempted > 0
+        ? ((user.totalScore / user.totalQuestionsAttempted) * 100).toFixed(1)
+        : "0.0";
+
+    // Creator eligibility gate (Level 3+ OR 3+ quizzes completed OR admin/teacher)
+    const canCreateQuiz =
+      (user.level || 1) >= 3 ||
+      (user.quizzesTaken || 0) >= 3 ||
+      user.role === "admin" ||
+      user.role === "teacher";
+
+    return res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      xp: user.xp || 0,
+      level: user.level || 1,
+      streak: user.streak || 1,
+      quizzesTaken: user.quizzesTaken || 0,
+      quizzesCreated: user.quizzesCreated || 0,
+      totalScore: user.totalScore || 0,
+      totalQuestionsAttempted: user.totalQuestionsAttempted || 0,
+      accuracyRating: `${accuracy}%`,
+      arenaRank: `#${rank}`,
+      canCreateQuiz,
+      badges: user.badges || [],
+      recentAttempts: (user.recentAttempts || []).slice(-10).reverse(),
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
 };

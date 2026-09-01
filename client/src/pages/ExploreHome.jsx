@@ -1,82 +1,118 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import DailyChallengeCard from '../components/DailyChallengeCard';
 
 const DOMAIN_TRACKS = [
   {
     id: '01',
-    title: 'React & Frontend Engineering',
-    desc: 'Hooks, Virtual DOM fiber diffing, asynchronous transitions, and state management architectures.',
+    title: 'React & Frontend Architecture',
+    desc: 'Hooks concurrency, Virtual DOM fiber diffing, async server components, and state management.',
     time: '12 MINS',
-    items: '10 QUESTIONS',
+    difficulty: 'Mid Tier',
+    tag: 'React',
   },
   {
     id: '02',
-    title: 'Node.js & Backend Architecture',
-    desc: 'Express middleware chains, JWT token verification, asynchronous event loops, and REST API design.',
+    title: 'Node.js & Backend Internals',
+    desc: 'Express middleware chains, JWT token flows, async event loop phases, and streaming buffers.',
     time: '15 MINS',
-    items: '12 QUESTIONS',
+    difficulty: 'Hard Tier',
+    tag: 'Node.js',
   },
   {
     id: '03',
     title: 'Algorithms & Data Structures',
-    desc: 'Tree traversals, dynamic programming, recursion, hash tables, and asymptotic time complexity.',
+    desc: 'Tree traversals, dynamic programming, sliding windows, recursion, and Big-O runtime analysis.',
     time: '20 MINS',
-    items: '15 QUESTIONS',
+    difficulty: 'Very Hard',
+    tag: 'Algorithms',
   },
   {
     id: '04',
-    title: 'Database Design & MongoDB',
-    desc: 'Document schema modeling, compound index optimization, aggregation pipelines, and ACID transactions.',
+    title: 'TypeScript & Type Gymnastics',
+    desc: 'Conditional types, mapped utility types, template literal inferences, and variance checks.',
     time: '10 MINS',
-    items: '8 QUESTIONS',
+    difficulty: 'Hard Tier',
+    tag: 'TypeScript',
   },
 ];
 
 export default function ExploreHome() {
-  const { isAuthenticated, isTeacher } = useAuth();
+  const { isAuthenticated, canCreateQuiz } = useAuth();
 
   return (
     <div>
       {/* Hero Section */}
       <section className="arena-hero">
         <div className="wrap">
-          <span className="eyebrow lime">LIVE EVALUATION ARENA</span>
+          {/* Active Players Live Indicator */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              background: 'rgba(200, 255, 55, 0.08)',
+              border: '1px solid rgba(200, 255, 55, 0.3)',
+              borderRadius: '100px',
+              marginBottom: '20px',
+            }}
+          >
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                background: 'var(--lime)',
+                borderRadius: '50%',
+                boxShadow: '0 0 10px var(--lime)',
+                display: 'inline-block',
+              }}
+            ></span>
+            <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--lime)', fontWeight: 700, letterSpacing: '0.04em' }}>
+              1,420+ DEVS CONTENDING LIVE
+            </span>
+          </div>
+
           <h1 className="arena-hero-headline">
-            Precision assessments for<br />
-            <span className="serif">technical</span> mastery.
+            Battle-tested challenges for<br />
+            <span className="serif">elite</span> software engineers.
           </h1>
 
           <p className="arena-hero-desc">
-            A timed assessment engine for developers and educators. Enter live challenge chambers, evaluate your accuracy, and climb global contender ranks.
+            Sharpen your system instincts against real-world engineering scenarios. Earn verified contender XP, unlock prestigious developer badges, and compete on the global leaderboard.
           </p>
 
           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
             <Link to="/quizzes" className="btn btn-primary btn-lg">
-              Explore Assessments ↗
+              ⚔️ Enter Arena Challenges
             </Link>
             <Link to="/practice" className="btn btn-secondary btn-lg">
-              ⚡ Quick Blitz Practice
+              ⚡ Quick Warm-Up
             </Link>
-            {isAuthenticated && isTeacher && (
-              <Link to="/studio" className="btn btn-secondary btn-lg">
-                Educator Studio ↗
+            <Link to="/leaderboard" className="btn btn-secondary btn-lg">
+              🏆 Live Leaderboard
+            </Link>
+            {isAuthenticated && canCreateQuiz && (
+              <Link to="/create-quiz" className="btn btn-secondary btn-lg">
+                + Author Challenge
               </Link>
             )}
           </div>
 
+
           {/* Stats Strip */}
           <div className="arena-stats-strip">
             <div className="stat-strip-item">
-              <span className="stat-strip-num">14,200+</span>
-              <span className="stat-strip-label">Questions Evaluated</span>
+              <span className="stat-strip-num">500+ XP</span>
+              <span className="stat-strip-label">Per Conquered Tier</span>
             </div>
             <div className="stat-strip-item">
-              <span className="stat-strip-num">94.2%</span>
-              <span className="stat-strip-label">Average Pass Accuracy</span>
+              <span className="stat-strip-num">8 Trophies</span>
+              <span className="stat-strip-label">Unlockable Dev Badges</span>
             </div>
             <div className="stat-strip-item">
-              <span className="stat-strip-num">&lt; 100ms</span>
-              <span className="stat-strip-label">Instant Result Grading</span>
+              <span className="stat-strip-num">Real-Time</span>
+              <span className="stat-strip-label">Global Arena Ranking</span>
             </div>
           </div>
         </div>
@@ -85,13 +121,16 @@ export default function ExploreHome() {
       {/* Featured Assessment Tracks */}
       <section style={{ padding: '60px 0' }}>
         <div className="wrap">
+          {/* Daily Featured Arena Challenge */}
+          <DailyChallengeCard />
+
           <div className="section-label">
             <div>
-              <span className="eyebrow">CURATED TRACKS</span>
-              <h2>Featured Assessment Domains</h2>
+              <span className="eyebrow lime">FEATURED TRACKS</span>
+              <h2>Developer Battlegrounds</h2>
             </div>
             <Link to="/quizzes" className="btn btn-secondary btn-sm">
-              View All Quizzes ↗
+              View All Challenges ↗
             </Link>
           </div>
 
@@ -100,9 +139,9 @@ export default function ExploreHome() {
               <article key={t.id} className="card card-interactive" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '220px' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span className="badge badge-lime">TRACK {t.id}</span>
+                    <span className="badge badge-lime">#{t.tag}</span>
                     <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      ⏱ {t.time} • 📝 {t.items}
+                      ⏱ {t.time} • {t.difficulty}
                     </span>
                   </div>
 
@@ -111,7 +150,7 @@ export default function ExploreHome() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
-                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)' }}>★ 150+ XP</span>
+                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)' }}>★ UP TO 2.0x XP</span>
                   <Link to="/quizzes" className="btn btn-primary btn-sm">
                     Enter Challenge ↗
                   </Link>
@@ -122,26 +161,28 @@ export default function ExploreHome() {
         </div>
       </section>
 
-      {/* Quick Practice Banner */}
+      {/* Quick Warm-Up Banner */}
       <section style={{ padding: '0 0 70px' }}>
         <div className="wrap">
           <div className="card" style={{ background: '#101712', border: '1px solid var(--border-strong)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
               <div>
-                <span className="eyebrow lime">SPEED DRILLS</span>
-                <h3 style={{ fontSize: '1.8rem', margin: '6px 0 4px' }}>Want to test your speed before full exams?</h3>
+                <span className="eyebrow lime">WARM-UP DRILLS</span>
+                <h3 style={{ fontSize: '1.8rem', margin: '6px 0 4px' }}>Want a quick warm-up before entering full challenges?</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', maxWidth: '580px' }}>
-                  Try our 5-question blitz arena with instant answer breakdowns, streak multipliers, and explanation notes.
+                  Jump into our 5-question warm-up round with instant explanations, streak combos, and immediate feedback.
                 </p>
               </div>
 
               <Link to="/practice" className="btn btn-primary btn-lg">
-                Start Blitz Practice ⚡
+                Start Quick Warm-Up ⚡
               </Link>
             </div>
           </div>
         </div>
       </section>
     </div>
+
   );
 }
+

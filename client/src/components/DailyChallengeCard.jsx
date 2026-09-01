@@ -1,0 +1,196 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { quizApi } from '../services/api';
+import { useAuth } from '../context/useAuth';
+
+export default function DailyChallengeCard() {
+  const { user } = useAuth();
+  const [dailyData, setDailyData] = useState(null);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchDaily = async () => {
+      try {
+        const res = await quizApi.getDailyChallenge();
+        if (mounted) setDailyData(res);
+      } catch (err) {
+        console.error('Failed to load daily challenge:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchDaily();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!dailyData?.timeRemainingMs) return;
+
+    let remaining = dailyData.timeRemainingMs;
+    const updateCountdown = () => {
+      if (remaining <= 0) {
+        setTimeLeft('00h : 00m : 00s');
+        return;
+      }
+      const hours = String(Math.floor((remaining / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+      const minutes = String(Math.floor((remaining / (1000 * 60)) % 60)).padStart(2, '0');
+      const seconds = String(Math.floor((remaining / 1000) % 60)).padStart(2, '0');
+      setTimeLeft(`${hours}h : ${minutes}m : ${seconds}s`);
+      remaining -= 1000;
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [dailyData]);
+
+  if (loading) {
+    return (
+      <div className="card" style={{ padding: '30px', textAlign: 'center', marginBottom: '40px' }}>
+        <span className="mono" style={{ color: 'var(--lime)' }}>⚡ Loading daily arena challenge...</span>
+      </div>
+    );
+  }
+
+  if (!dailyData || !dailyData.quiz) return null;
+
+  const quiz = dailyData.quiz;
+  const streak = user?.streak || dailyData.streak || 1;
+  const isCompleted = dailyData.completedToday;
+
+  return (
+    <div
+      className="card daily-challenge-card"
+      style={{
+        marginBottom: '48px',
+        padding: '36px',
+        background: 'radial-gradient(circle at top right, rgba(200, 255, 55, 0.12), #0b110d 75%)',
+        border: '1px solid rgba(200, 255, 55, 0.45)',
+        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Background Accent glow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-40px',
+          right: '-40px',
+          width: '180px',
+          height: '180px',
+          background: 'rgba(200, 255, 55, 0.1)',
+          filter: 'blur(45px)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span
+              className="badge badge-lime"
+              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.04em' }}
+            >
+              🔥 DAILY ARENA CHALLENGE
+            </span>
+            <span
+              className="badge"
+              style={{
+                background: 'rgba(245, 158, 11, 0.15)',
+                color: '#f59e0b',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                fontSize: '0.78rem',
+              }}
+            >
+              ★ 2.0x DOUBLE XP
+            </span>
+          </div>
+
+          <h2 style={{ fontSize: '2.1rem', margin: '6px 0 8px', letterSpacing: '-0.02em' }}>
+            {quiz.title}
+          </h2>
+
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.94rem', maxWidth: '620px', margin: '0 0 18px', lineHeight: '1.55' }}>
+            {quiz.description || 'Solve today’s community battle challenge to keep your streak flame alive and claim double XP points.'}
+          </p>
+
+          {/* Metadata chips */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="badge" style={{ textTransform: 'capitalize' }}>
+              Tier: {quiz.difficulty || 'mid'}
+            </span>
+            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              ⏱ {quiz.timeLimitMinutes || 10} Mins
+            </span>
+            {(quiz.tags || []).map((t, idx) => (
+              <span key={idx} className="mono" style={{ fontSize: '0.75rem', color: 'var(--lime)', background: 'rgba(200,255,55,0.06)', padding: '2px 8px', borderRadius: '4px' }}>
+                #{t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Action Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px', minWidth: '220px' }}>
+          {/* Countdown timer */}
+          <div style={{ textAlign: 'right' }}>
+            <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
+              RESETS IN:
+            </span>
+            <span
+              className="mono"
+              style={{
+                fontSize: '1.15rem',
+                color: 'var(--lime)',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                background: 'rgba(0, 0, 0, 0.35)',
+                padding: '4px 12px',
+                borderRadius: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'inline-block',
+              }}
+            >
+              ⏳ {timeLeft || 'Calculating...'}
+            </span>
+          </div>
+
+          {/* Current streak badge */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              padding: '6px 14px',
+              borderRadius: '100px',
+              fontSize: '0.8rem',
+              color: '#fbbf24',
+              fontFamily: 'DM Mono',
+              fontWeight: 700,
+            }}
+          >
+            🔥 {streak} DAY STREAK ACTIVE
+          </div>
+
+          {/* Launch Button */}
+          <Link
+            to={`/quiz/${quiz._id}`}
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', textAlign: 'center' }}
+          >
+            {isCompleted ? 'Re-battle Daily (Active ✓) ↺' : 'Enter Daily Challenge (2.0x XP) ⚔️'}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,61 +1,92 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/ToastContext';
+import FormattedQuestion from '../components/FormattedQuestion';
+import CodeSandboxModal from '../components/CodeSandboxModal';
+import { playCorrectSound, playIncorrectSound, playStreakSound } from '../utils/soundEffects';
 
 const PRACTICE_POOL = [
   {
     id: 1,
-    category: 'JAVASCRIPT ENGINE',
-    question: 'Which component in the V8 engine is responsible for optimizing hot bytecode into machine code?',
-    options: ['Ignition Interpreter', 'TurboFan Compiler', 'Garbage Collector (Scavenger)', 'Libuv Event Loop'],
-    correctIndex: 1,
-    explanation: 'TurboFan is V8’s optimizing compiler that analyzes hot functions during execution and optimizes them into native machine code.',
+    category: 'JAVASCRIPT BASICS',
+    question: 'What is the output of the following comparison in JavaScript?',
+    codeSnippet: 'console.log(typeof null);\nconsole.log(typeof undefined);',
+    language: 'javascript',
+    options: ['"object", "undefined"', '"null", "undefined"', '"object", "null"', '"undefined", "undefined"'],
+    correctIndex: 0,
+    explanation: 'In JavaScript, `typeof null` returns "object" due to a historical bug in the initial 1995 implementation, whereas `typeof undefined` is "undefined".',
   },
   {
     id: 2,
-    category: 'REACT HOOKS',
-    question: 'Why should useEffect dependencies array include all referenced reactive values?',
-    options: [
-      'To prevent the component from re-rendering completely',
-      'To ensure closures do not capture stale state or props',
-      'To automatically trigger CSS reflows',
-      'To bypass the React Fiber scheduler',
-    ],
-    correctIndex: 1,
-    explanation: 'Failing to declare reactive dependencies causes the effect closure to reference stale state values from previous renders.',
+    category: 'ARRAY METHODS',
+    question: 'What does the following array transformation output?',
+    codeSnippet: 'const numbers = [1, 2, 3, 4];\nconst result = numbers\n  .filter(n => n % 2 === 0)\n  .map(n => n * 10);\n\nconsole.log(result);',
+    language: 'javascript',
+    options: ['[20, 40]', '[10, 30]', '[2, 4]', '[10, 20, 30, 40]'],
+    correctIndex: 0,
+    explanation: '`.filter(n => n % 2 === 0)` filters even numbers `[2, 4]`, and `.map(n => n * 10)` multiplies each by 10 to produce `[20, 40]`.',
   },
   {
     id: 3,
-    category: 'HTTP & NETWORKING',
-    question: 'Which HTTP header prevents cross-site framing attacks (Clickjacking)?',
-    options: ['X-Frame-Options', 'Access-Control-Allow-Origin', 'X-Content-Type-Options', 'Strict-Transport-Security'],
+    category: 'REACT FUNDAMENTALS',
+    question: 'In React, why do we use the state updater function `setCount(prev => prev + 1)` instead of `setCount(count + 1)`?',
+    options: [
+      'To ensure updates use the most recent state when multiple updates are queued',
+      'To prevent React from re-rendering the component',
+      'To automatically memoize the variable with useMemo',
+      'To convert the state variable to a global window variable',
+    ],
     correctIndex: 0,
-    explanation: 'X-Frame-Options (or Content-Security-Policy frame-ancestors) instructs the browser whether a page can be rendered in a <frame> or <iframe>.',
+    explanation: 'State updates in React can be batched. Using the functional updater `(prev => prev + 1)` guarantees you are calculating against the latest queued state value.',
   },
   {
     id: 4,
-    category: 'ALGORITHMS',
-    question: 'What is the average time complexity of searching in a balanced Binary Search Tree (AVL / Red-Black)?',
-    options: ['O(1)', 'O(log N)', 'O(N)', 'O(N log N)'],
-    correctIndex: 1,
-    explanation: 'Because the tree height is guaranteed to be logarithmic relative to the number of nodes, search operations take O(log N).',
+    category: 'WEB DEV BASICS',
+    question: 'What is the difference between `==` and `===` in JavaScript?',
+    options: [
+      '`===` performs strict comparison checking both value and type without coercion',
+      '`==` is faster and checks memory references',
+      '`===` converts strings to numbers automatically',
+      'They are completely identical in modern ES6+',
+    ],
+    correctIndex: 0,
+    explanation: '`===` (strict equality) checks both type and value without performing type coercion, while `==` coerces values to matching types before comparing.',
   },
   {
     id: 5,
-    category: 'DATABASE DESIGN',
-    question: 'In MongoDB, which index type optimizes queries involving multiple fields with sorted conditions?',
-    options: ['Compound Index', 'Text Index', 'Geospatial Index', 'Hashed Index'],
+    category: 'CSS & STYLING',
+    question: 'Which CSS property centers items along the cross-axis inside a Flexbox container?',
+    codeSnippet: '.container {\n  display: flex;\n  /* Which property centers items vertically? */\n  align-items: center;\n}',
+    language: 'css',
+    options: ['align-items: center', 'justify-content: center', 'align-content: flex-start', 'text-align: center'],
     correctIndex: 0,
-    explanation: 'Compound indexes hold references to multiple fields in a document, accelerating multi-attribute filter and sort operations.',
+    explanation: 'In Flexbox, `justify-content` aligns items along the main axis (horizontal by default), while `align-items` aligns along the cross axis (vertical by default).',
+  },
+  {
+    id: 6,
+    category: 'ASYNC JAVASCRIPT',
+    question: 'What is the logged order of the following asynchronous code snippet?',
+    codeSnippet: 'console.log("A");\nsetTimeout(() => console.log("B"), 0);\nPromise.resolve().then(() => console.log("C"));\nconsole.log("D");',
+    language: 'javascript',
+    options: ['A, D, C, B', 'A, B, C, D', 'A, D, B, C', 'C, A, D, B'],
+    correctIndex: 0,
+    explanation: 'Synchronous statements run first ("A", "D"). Microtasks (Promise `.then`) run next ("C"). Macrotasks (`setTimeout`) run in the subsequent tick ("B").',
   },
 ];
 
 export default function QuickPractice() {
+  const { refreshUser } = useAuth();
+  const { showToast } = useToast();
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [showSandbox, setShowSandbox] = useState(false);
 
   const currentQ = PRACTICE_POOL[currentIdx];
 
@@ -66,9 +97,32 @@ export default function QuickPractice() {
     setIsAnswered(true);
 
     if (idx === currentQ.correctIndex) {
+      playCorrectSound();
       setScore((prev) => prev + 1);
-      setStreak((prev) => prev + 1);
+      setStreak((prev) => {
+        const next = prev + 1;
+        if (next > maxStreak) setMaxStreak(next);
+        if (next === 3) {
+          playStreakSound(3);
+          showToast({
+            title: '🔥 3x Combo Streak!',
+            message: '1.25x Warm-up bonus active!',
+            icon: '🔥',
+            type: 'badge',
+          });
+        } else if (next === 5) {
+          playStreakSound(5);
+          showToast({
+            title: '⚡ 5x ON FIRE STREAK!',
+            message: 'Flawless instinct! Maximum multiplier reached!',
+            icon: '👑',
+            type: 'levelup',
+          });
+        }
+        return next;
+      });
     } else {
+      playIncorrectSound();
       setStreak(0);
     }
   };
@@ -80,6 +134,14 @@ export default function QuickPractice() {
       setIsAnswered(false);
     } else {
       setCompleted(true);
+      const earnedXp = Math.round(score * 30 + maxStreak * 15);
+      showToast({
+        title: 'Warm-Up Completed!',
+        message: `+${earnedXp} Warm-up XP points earned!`,
+        icon: '⚡',
+        type: 'levelup',
+      });
+      if (refreshUser) refreshUser();
     }
   };
 
@@ -88,19 +150,31 @@ export default function QuickPractice() {
     setSelectedOpt(null);
     setIsAnswered(false);
     setStreak(0);
+    setMaxStreak(0);
     setScore(0);
     setCompleted(false);
   };
+
+  const streakMultiplier = streak >= 5 ? '1.5x' : streak >= 3 ? '1.25x' : '1.0x';
 
   return (
     <div className="practice-page wrap" style={{ padding: '50px 0', maxWidth: '780px' }}>
       <div className="section-label">
         <div>
-          <span className="eyebrow lime">SPEED DRILLS</span>
-          <h2>Blitz Practice Arena</h2>
+          <span className="eyebrow lime">WARM-UP DRILLS</span>
+          <h2>Developer Quick Warm-Up</h2>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <span className="badge badge-lime">🔥 {streak}x STREAK</span>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <span
+            className="badge badge-lime"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.78rem',
+              boxShadow: streak >= 3 ? '0 0 12px rgba(200, 255, 55, 0.3)' : 'none',
+            }}
+          >
+            🔥 {streak}x STREAK ({streakMultiplier} XP)
+          </span>
           <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {currentIdx + 1} / {PRACTICE_POOL.length}
           </span>
@@ -111,13 +185,18 @@ export default function QuickPractice() {
         <div className="card" style={{ padding: '34px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <span className="badge badge-emerald">{currentQ.category}</span>
+            <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              Score: {score} / {currentIdx + (isAnswered ? 1 : 0)}
+            </span>
           </div>
 
-          <h3 style={{ fontSize: '1.4rem', lineHeight: '1.45', margin: '0 0 28px' }}>
-            {currentQ.question}
-          </h3>
+          <FormattedQuestion
+            text={currentQ.question}
+            codeSnippet={currentQ.codeSnippet}
+            language={currentQ.language || 'javascript'}
+          />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px', marginTop: '16px' }}>
             {currentQ.options.map((opt, idx) => {
               const isSelected = selectedOpt === idx;
               const isCorrect = idx === currentQ.correctIndex;
@@ -135,13 +214,21 @@ export default function QuickPractice() {
                   type="button"
                   className={customClass}
                   style={{
-                    borderColor: isAnswered && isCorrect ? 'var(--lime)' : isAnswered && isSelected && !isCorrect ? 'var(--rose)' : undefined,
-                    background: isAnswered && isSelected && !isCorrect ? 'rgba(248, 113, 113, 0.1)' : undefined,
+                    borderColor:
+                      isAnswered && isCorrect
+                        ? 'var(--lime)'
+                        : isAnswered && isSelected && !isCorrect
+                        ? 'var(--rose)'
+                        : undefined,
+                    background:
+                      isAnswered && isSelected && !isCorrect
+                        ? 'rgba(248, 113, 113, 0.12)'
+                        : undefined,
                   }}
                   onClick={() => handleSelect(idx)}
                 >
                   <span className="exam-opt-badge">{String.fromCharCode(65 + idx)}</span>
-                  <span style={{ fontSize: '0.94rem' }}>{opt}</span>
+                  <span style={{ fontSize: '0.94rem', color: '#f3f4f6' }}>{opt}</span>
                 </button>
               );
             })}
@@ -153,16 +240,29 @@ export default function QuickPractice() {
                 padding: '16px 20px',
                 border: '1px solid var(--lime)',
                 background: 'rgba(200, 255, 55, 0.06)',
-                borderRadius: '4px',
+                borderRadius: '6px',
                 marginBottom: '24px',
               }}
             >
-              <strong style={{ color: 'var(--lime)', display: 'block', marginBottom: '4px', font: '600 0.88rem "DM Mono", monospace' }}>
+              <strong style={{ color: 'var(--lime)', display: 'block', marginBottom: '6px', font: '600 0.88rem "DM Mono", monospace' }}>
                 {selectedOpt === currentQ.correctIndex ? '✓ CORRECT ANSWER' : '✕ VERIFIED EXPLANATION:'}
               </strong>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#d1d5db', lineHeight: '1.55' }}>
                 {currentQ.explanation}
               </p>
+
+              {currentQ.codeSnippet && (
+                <div style={{ marginTop: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowSandbox(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: '0.74rem', padding: '4px 10px' }}
+                  >
+                    🧪 Run & Experiment in Sandbox
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -173,35 +273,41 @@ export default function QuickPractice() {
               className="btn btn-primary btn-lg"
               style={{ width: '100%' }}
             >
-              {currentIdx < PRACTICE_POOL.length - 1 ? 'Next Question →' : 'View Practice Results ↗'}
+              {currentIdx < PRACTICE_POOL.length - 1 ? 'Next Question →' : 'Complete Warm-Up ⚡'}
             </button>
           )}
         </div>
       ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '50px 30px' }}>
-          <div className="score-circle tier-mastery">
-            <span className="score-percentage mono">
-              {Math.round((score / PRACTICE_POOL.length) * 100)}%
-            </span>
-            <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              {score} / {PRACTICE_POOL.length} Correct
-            </span>
-          </div>
-
-          <h2 style={{ fontSize: '2.2rem', margin: '14px 0 6px' }}>Drill Complete</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '28px', maxWidth: '440px', margin: '0 auto 28px' }}>
-            Concepts reinforced. Review your performance and jump into full assessment challenges.
+        <div className="card" style={{ textAlign: 'center', padding: '48px 30px' }}>
+          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '14px' }}>⚡</span>
+          <span className="eyebrow lime">WARM-UP COMPLETE</span>
+          <h2 style={{ fontSize: '2.2rem', margin: '8px 0 12px' }}>Instincts Calibrated!</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.96rem', marginBottom: '28px' }}>
+            You scored <strong>{score} / {PRACTICE_POOL.length}</strong> with an active streak of <strong>{maxStreak}x</strong>.
           </p>
 
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button type="button" onClick={handleRestart} className="btn btn-primary btn-lg">
-              Restart Drill ↺
+              Warm Up Again ↺
             </button>
             <Link to="/quizzes" className="btn btn-secondary btn-lg">
-              Explore Full Quizzes ↗
+              Enter Arena Challenges ⚔️
+            </Link>
+            <Link to="/leaderboard" className="btn btn-secondary btn-lg">
+              Leaderboard 🏆
             </Link>
           </div>
         </div>
+      )}
+
+      {/* Interactive Code Sandbox Modal */}
+      {showSandbox && currentQ.codeSnippet && (
+        <CodeSandboxModal
+          initialCode={currentQ.codeSnippet}
+          language={currentQ.language || 'javascript'}
+          title={`${currentQ.category} Sandbox`}
+          onClose={() => setShowSandbox(false)}
+        />
       )}
     </div>
   );

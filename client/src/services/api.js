@@ -1,6 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || '';
 const API_BASE = `${API_URL}/api`;
-
 
 const getToken = () => localStorage.getItem('quiz_token');
 
@@ -49,7 +48,16 @@ export const quizApi = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  getAllQuizzes: () => request('/quizzes'),
+  getAllQuizzes: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.tag && params.tag !== 'all') query.append('tag', params.tag);
+    if (params.difficulty && params.difficulty !== 'all') query.append('difficulty', params.difficulty);
+    if (params.search) query.append('search', params.search);
+    const qs = query.toString();
+    return request(`/quizzes${qs ? `?${qs}` : ''}`);
+  },
+  getMyQuizzes: () => request('/quizzes/my/authored'),
+  getDailyChallenge: () => request('/quizzes/daily'),
   getQuizById: (quizId) => request(`/quizzes/${quizId}`),
   publishQuiz: (quizId) =>
     request(`/quizzes/${quizId}/publish`, {
@@ -70,3 +78,8 @@ export const questionApi = {
     }),
   getQuestionsByQuiz: (quizId) => request(`/questions/quiz/${quizId}`),
 };
+
+export const leaderboardApi = {
+  getLeaderboard: () => request('/leaderboard'),
+};
+

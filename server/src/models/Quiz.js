@@ -9,6 +9,25 @@ const quizSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    creatorName: {
+      type: String,
+      default: "Dev Contributor",
+      trim: true,
+    },
+    tags: {
+      type: [String],
+      default: ["JavaScript"],
+    },
+    difficulty: {
+      type: String,
+      enum: ["easy", "mid", "hard", "very hard"],
+      default: "easy",
+    },
+    playsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
       enum: ["draft", "published", "closed"],
@@ -23,4 +42,4 @@ const quizSchema = new mongoose.Schema(
 
 const Quiz = mongoose.model("Quiz", quizSchema);
 
-export default Quiz;
+export default Quiz;
