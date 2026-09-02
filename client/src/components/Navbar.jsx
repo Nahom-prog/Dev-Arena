@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { isSoundEnabled, toggleSound } from '../utils/soundEffects';
+import { calculateLevelData } from '../utils/levelEngine';
 import {
   Volume2,
   VolumeX,
@@ -43,7 +44,9 @@ export default function Navbar() {
     setSoundOn(newState);
   };
 
-  const levelStr = String(user?.level || 1).padStart(2, '0');
+  const levelData = calculateLevelData(user?.xp || 0);
+  const displayLevel = user?.level ? Math.max(user.level, levelData.level) : levelData.level;
+  const levelStr = String(displayLevel).padStart(2, '0');
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : null;
 
   return (
@@ -131,7 +134,7 @@ export default function Navbar() {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <User size={15} color="var(--lime)" />
-                        <span>Player Dossier</span>
+                        <span>Player Profile</span>
                       </div>
                       <ExternalLink size={12} style={{ opacity: 0.6 }} />
                     </Link>

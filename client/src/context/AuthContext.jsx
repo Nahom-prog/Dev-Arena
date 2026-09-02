@@ -71,8 +71,7 @@ export function AuthProvider({ children }) {
 
   const canCreateQuiz =
     !!user &&
-    ((user.level || 1) >= 3 ||
-      (user.quizzesTaken || 0) >= 3 ||
+    (((user.level || 1) >= 3 && (user.quizzesTaken || 0) >= 3) ||
       user.role === 'admin' ||
       user.role === 'teacher' ||
       user.canCreateQuiz);

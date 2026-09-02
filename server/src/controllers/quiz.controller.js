@@ -2,6 +2,7 @@ import Quiz from "../models/Quiz.js";
 import Question from "../models/Question.js";
 import User from "../models/User.js";
 import { checkAndAwardBadges } from "../utils/badgeEngine.js";
+import { getLevelFromXp } from "../utils/levelEngine.js";
 
 export const createQuiz = async (req, res) => {
   try {
@@ -10,16 +11,15 @@ export const createQuiz = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Eligibility Gate: Level 3+ or 3+ quizzes taken or admin/teacher
+    // Eligibility Gate: Level 3+ AND 3+ quizzes taken (or admin/teacher)
     const isEligible =
-      (user.level || 1) >= 3 ||
-      (user.quizzesTaken || 0) >= 3 ||
+      ((user.level || 1) >= 3 && (user.quizzesTaken || 0) >= 3) ||
       user.role === "admin" ||
       user.role === "teacher";
 
     if (!isEligible) {
       return res.status(403).json({
-        message: "Creator Mode Locked: Reach Level 3 or complete 3 assessments to unlock quiz authoring!",
+        message: "Creator Mode Locked: Must be at least Level 3 AND complete 3 assessments to unlock challenge authoring!",
         currentLevel: user.level || 1,
         quizzesTaken: user.quizzesTaken || 0,
         requiredLevel: 3,
@@ -254,32 +254,37 @@ export const submitQuiz = async (req, res) => {
     // Update User progression
     const user = await User.findById(req.user.id);
     if (user) {
-      user.xp = (user.xp || 0) + xpEarned;
-      user.level = Math.floor(user.xp / 250) + 1;
+      const now = new Date();
+      let dailyAlreadyCompleted = false;
+
+      if (isTodayDaily && user.lastDailyCompletedDate) {
+        const lastDate = new Date(user.lastDailyCompletedDate);
+        dailyAlreadyCompleted =
+          lastDate.getUTCFullYear() === now.getUTCFullYear() &&
+          lastDate.getUTCMonth() === now.getUTCMonth() &&
+          lastDate.getUTCDate() === now.getUTCDate();
+      }
+
+      // If daily challenge was already solved today, award 0 XP for retakes
+      const finalXpEarned = (isTodayDaily && dailyAlreadyCompleted) ? 0 : xpEarned;
+
+      user.xp = (user.xp || 0) + finalXpEarned;
+      user.level = getLevelFromXp(user.xp);
       user.quizzesTaken = (user.quizzesTaken || 0) + 1;
       user.totalScore = (user.totalScore || 0) + score;
       user.totalQuestionsAttempted = (user.totalQuestionsAttempted || 0) + totalQuestions;
 
-      // Update Streak if daily challenge completed
-      const now = new Date();
-      if (isTodayDaily) {
+      // Update Streak only on first daily completion of the day
+      if (isTodayDaily && !dailyAlreadyCompleted) {
         if (!user.lastDailyCompletedDate) {
           user.streak = (user.streak || 0) + 1;
         } else {
           const lastDate = new Date(user.lastDailyCompletedDate);
           const diffDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          const sameDay =
-            lastDate.getUTCFullYear() === now.getUTCFullYear() &&
-            lastDate.getUTCMonth() === now.getUTCMonth() &&
-            lastDate.getUTCDate() === now.getUTCDate();
-
-          if (!sameDay) {
-            if (diffDays === 1) {
-              user.streak = (user.streak || 0) + 1;
-            } else if (diffDays > 1) {
-              user.streak = 1;
-            }
+          if (diffDays === 1) {
+            user.streak = (user.streak || 0) + 1;
+          } else if (diffDays > 1) {
+            user.streak = 1;
           }
         }
         user.lastDailyCompletedDate = now;
@@ -292,7 +297,7 @@ export const submitQuiz = async (req, res) => {
         score,
         totalQuestions,
         percentage,
-        xpEarned,
+        xpEarned: finalXpEarned,
         date: now,
       });
 
@@ -314,7 +319,7 @@ export const submitQuiz = async (req, res) => {
         score,
         totalQuestions,
         percentage,
-        xpEarned,
+        xpEarned: finalXpEarned,
         newTotalXp: user.xp,
         newLevel: user.level,
         streak: user.streak,
