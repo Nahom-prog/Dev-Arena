@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { quizApi } from '../services/api';
+import { Swords, Clock, Users, Zap } from 'lucide-react';
 
 const SAMPLE_DEV_QUIZZES = [
   {
@@ -92,7 +93,9 @@ export default function QuizzesList() {
     <div className="quizzes-page wrap" style={{ padding: '50px 0' }}>
       <div className="section-label">
         <div>
-          <span className="eyebrow lime">ARENA CHALLENGES</span>
+          <span className="eyebrow lime" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Swords size={14} /> ARENA CHALLENGES
+          </span>
           <h2>Developer Battlegrounds & Quizzes</h2>
         </div>
         <span>Select any track to test your knowledge, grind XP, and climb the leaderboard.</span>
@@ -153,7 +156,9 @@ export default function QuizzesList() {
       {/* Quiz Cards Grid */}
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
-          <span className="mono" style={{ color: 'var(--lime)' }}>⚡ Loading Arena Challenges...</span>
+          <span className="mono" style={{ color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <Zap size={16} /> Loading Arena Challenges...
+          </span>
         </div>
       ) : quizzes.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
@@ -178,12 +183,12 @@ export default function QuizzesList() {
                       <span className={`badge ${diffInfo.badgeClass}`} style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
                         {diffInfo.label}
                       </span>
-                      <span className="badge" style={{ fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)' }}>
-                        ⏱ {quiz.timeLimitMinutes || 10}m
+                      <span className="badge" style={{ fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={11} /> {quiz.timeLimitMinutes || 10}m
                       </span>
                     </div>
-                    <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      👥 {quiz.playsCount || 0} plays
+                    <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Users size={12} /> {quiz.playsCount || 0} plays
                     </span>
                   </div>
 
@@ -205,8 +210,9 @@ export default function QuizzesList() {
                   <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
                     Author: <span style={{ color: 'var(--text)' }}>{quiz.creatorName || quiz.teacherId?.name || 'Dev Contributor'}</span>
                   </span>
-                  <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm">
-                    Enter Arena ⚔️
+                  <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <Swords size={14} />
+                    <span>Enter Arena</span>
                   </Link>
                 </div>
               </article>
