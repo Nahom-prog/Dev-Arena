@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { quizApi } from '../services/api';
 import { useAuth } from '../context/useAuth';
+import { Flame, Zap, Clock, Timer, Swords, RotateCcw } from 'lucide-react';
 
 export default function DailyChallengeCard() {
   const { user } = useAuth();
@@ -52,7 +53,9 @@ export default function DailyChallengeCard() {
   if (loading) {
     return (
       <div className="card" style={{ padding: '30px', textAlign: 'center', marginBottom: '40px' }}>
-        <span className="mono" style={{ color: 'var(--lime)' }}>⚡ Loading daily arena challenge...</span>
+        <span className="mono" style={{ color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <Zap size={16} /> Loading daily arena challenge...
+        </span>
       </div>
     );
   }
@@ -96,9 +99,10 @@ export default function DailyChallengeCard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
             <span
               className="badge badge-lime"
-              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.04em' }}
+              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              🔥 DAILY ARENA CHALLENGE
+              <Flame size={15} color="#080b09" />
+              DAILY ARENA CHALLENGE
             </span>
             <span
               className="badge"
@@ -107,9 +111,13 @@ export default function DailyChallengeCard() {
                 color: '#f59e0b',
                 border: '1px solid rgba(245, 158, 11, 0.4)',
                 fontSize: '0.78rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
               }}
             >
-              ★ 2.0x DOUBLE XP
+              <Zap size={13} color="#f59e0b" />
+              2.0x DOUBLE XP
             </span>
           </div>
 
@@ -122,12 +130,12 @@ export default function DailyChallengeCard() {
           </p>
 
           {/* Metadata chips */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span className="badge" style={{ textTransform: 'capitalize' }}>
               Tier: {quiz.difficulty || 'mid'}
             </span>
-            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              ⏱ {quiz.timeLimitMinutes || 10} Mins
+            <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <Clock size={13} /> {quiz.timeLimitMinutes || 10} Mins
             </span>
             {(quiz.tags || []).map((t, idx) => (
               <span key={idx} className="mono" style={{ fontSize: '0.75rem', color: 'var(--lime)', background: 'rgba(200,255,55,0.06)', padding: '2px 8px', borderRadius: '4px' }}>
@@ -155,17 +163,20 @@ export default function DailyChallengeCard() {
                 padding: '4px 12px',
                 borderRadius: '4px',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'inline-block',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
             >
-              ⏳ {timeLeft || 'Calculating...'}
+              <Timer size={16} />
+              {timeLeft || 'Calculating...'}
             </span>
           </div>
 
           {/* Current streak badge */}
           <div
             style={{
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
               background: 'rgba(245, 158, 11, 0.1)',
@@ -178,16 +189,27 @@ export default function DailyChallengeCard() {
               fontWeight: 700,
             }}
           >
-            🔥 {streak} DAY STREAK ACTIVE
+            <Flame size={14} color="#fbbf24" />
+            {streak} DAY STREAK ACTIVE
           </div>
 
           {/* Launch Button */}
           <Link
             to={`/quiz/${quiz._id}`}
             className="btn btn-primary btn-lg"
-            style={{ width: '100%', textAlign: 'center' }}
+            style={{ width: '100%', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
-            {isCompleted ? 'Re-battle Daily (Active ✓) ↺' : 'Enter Daily Challenge (2.0x XP) ⚔️'}
+            {isCompleted ? (
+              <>
+                <RotateCcw size={16} />
+                <span>Re-battle Daily (Active ✓)</span>
+              </>
+            ) : (
+              <>
+                <Swords size={18} />
+                <span>Enter Daily Challenge (2.0x XP)</span>
+              </>
+            )}
           </Link>
         </div>
       </div>

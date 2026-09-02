@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import DailyChallengeCard from '../components/DailyChallengeCard';
+import { Swords, Zap, Trophy, Plus, Clock, ArrowRight } from 'lucide-react';
 
 const DOMAIN_TRACKS = [
   {
@@ -83,18 +84,22 @@ export default function ExploreHome() {
           </p>
 
           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <Link to="/quizzes" className="btn btn-primary btn-lg">
-              ⚔️ Enter Arena Challenges
+            <Link to="/quizzes" className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Swords size={18} />
+              <span>Enter Arena Challenges</span>
             </Link>
-            <Link to="/practice" className="btn btn-secondary btn-lg">
-              ⚡ Quick Warm-Up
+            <Link to="/practice" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Zap size={18} />
+              <span>Quick Warm-Up</span>
             </Link>
-            <Link to="/leaderboard" className="btn btn-secondary btn-lg">
-              🏆 Live Leaderboard
+            <Link to="/leaderboard" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Trophy size={18} />
+              <span>Live Leaderboard</span>
             </Link>
             {isAuthenticated && canCreateQuiz && (
-              <Link to="/create-quiz" className="btn btn-secondary btn-lg">
-                + Author Challenge
+              <Link to="/create-quiz" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Plus size={18} />
+                <span>Author Challenge</span>
               </Link>
             )}
           </div>
@@ -140,8 +145,8 @@ export default function ExploreHome() {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <span className="badge badge-lime">#{t.tag}</span>
-                    <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      ⏱ {t.time} • {t.difficulty}
+                    <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <Clock size={12} /> {t.time} • {t.difficulty}
                     </span>
                   </div>
 
@@ -150,7 +155,9 @@ export default function ExploreHome() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
-                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)' }}>★ UP TO 2.0x XP</span>
+                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Zap size={12} /> UP TO 2.0x XP
+                  </span>
                   <Link to="/quizzes" className="btn btn-primary btn-sm">
                     Enter Challenge ↗
                   </Link>
@@ -174,8 +181,9 @@ export default function ExploreHome() {
                 </p>
               </div>
 
-              <Link to="/practice" className="btn btn-primary btn-lg">
-                Start Quick Warm-Up ⚡
+              <Link to="/practice" className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={18} />
+                <span>Start Quick Warm-Up</span>
               </Link>
             </div>
           </div>

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { leaderboardApi } from '../services/api';
+import { Trophy, Crown, Medal, Award, Zap } from 'lucide-react';
 
 const getDevTitle = (level, xp) => {
-  if (level >= 12 || xp >= 3000) return 'Grandmaster 👑';
-  if (level >= 8 || xp >= 2000) return 'Staff Architect 🏗️';
-  if (level >= 5 || xp >= 1200) return 'Senior Dev ⚡';
-  if (level >= 3 || xp >= 500) return 'Mid Engineer 💻';
-  return 'Junior Contender 🚀';
+  if (level >= 12 || xp >= 3000) return 'Grandmaster';
+  if (level >= 8 || xp >= 2000) return 'Staff Architect';
+  if (level >= 5 || xp >= 1200) return 'Senior Dev';
+  if (level >= 3 || xp >= 500) return 'Mid Engineer';
+  return 'Junior Contender';
 };
 
 export default function Leaderboard() {
@@ -39,7 +40,9 @@ export default function Leaderboard() {
     <div className="leaderboard-page wrap" style={{ padding: '50px 0' }}>
       <div className="section-label">
         <div>
-          <span className="eyebrow lime">HALL OF FAME</span>
+          <span className="eyebrow lime" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Trophy size={14} /> HALL OF FAME
+          </span>
           <h2>Global Developer Arena Rankings</h2>
         </div>
         <span>Real-time standings ranked by verified XP points, accuracy rating, and challenges solved.</span>
@@ -47,7 +50,9 @@ export default function Leaderboard() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
-          <div className="mono" style={{ fontSize: '1.1rem', color: 'var(--lime)' }}>⚡ Synchronizing Arena Standings...</div>
+          <div className="mono" style={{ fontSize: '1.1rem', color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <Zap size={18} /> Synchronizing Arena Standings...
+          </div>
         </div>
       ) : error ? (
         <div className="card" style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>
@@ -65,7 +70,10 @@ export default function Leaderboard() {
             <div className="podium-grid">
               {/* #2 Silver */}
               <div className="card podium-card" style={{ opacity: top2 ? 1 : 0.4 }}>
-                <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>RANK #02</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>RANK #02</span>
+                  <Medal size={20} color="#94a3b8" />
+                </div>
                 <h3 style={{ fontSize: '1.35rem', margin: '8px 0 4px' }}>{top2 ? top2.name : 'Awaiting Contender'}</h3>
                 {top2 && (
                   <>
@@ -84,9 +92,12 @@ export default function Leaderboard() {
 
               {/* #1 Gold */}
               <div className="card podium-card gold">
-                <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', fontWeight: 700 }}>
-                  ★ RANK #01 (ARENA CHAMPION)
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', fontWeight: 700 }}>
+                    RANK #01 (ARENA CHAMPION)
+                  </span>
+                  <Crown size={22} color="#f59e0b" />
+                </div>
                 <h2 style={{ fontSize: '1.7rem', margin: '8px 0 4px' }}>{top1.name}</h2>
                 <span className="badge badge-lime" style={{ marginBottom: '12px' }}>
                   {getDevTitle(top1.level, top1.xp)}
@@ -101,7 +112,10 @@ export default function Leaderboard() {
 
               {/* #3 Bronze */}
               <div className="card podium-card" style={{ opacity: top3 ? 1 : 0.4 }}>
-                <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>RANK #03</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>RANK #03</span>
+                  <Award size={20} color="#d97706" />
+                </div>
                 <h3 style={{ fontSize: '1.35rem', margin: '8px 0 4px' }}>{top3 ? top3.name : 'Awaiting Contender'}</h3>
                 {top3 && (
                   <>
@@ -120,42 +134,72 @@ export default function Leaderboard() {
             </div>
           )}
 
-          {/* Leaderboard Table */}
-          <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
-            <table className="leaderboard-table">
+          {/* Full Table */}
+          <div className="card" style={{ padding: '0', overflowX: 'auto' }}>
+            <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Developer Contender</th>
-                  <th>Tier & Level</th>
-                  <th>Challenges</th>
-                  <th>Accuracy</th>
-                  <th>Badges</th>
-                  <th style={{ textAlign: 'right' }}>Total XP</th>
+                <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>RANK</th>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>DEVELOPER</th>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>TIER</th>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>ACCURACY</th>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>SOLVED</th>
+                  <th style={{ padding: '16px 20px', fontSize: '0.78rem', textAlign: 'right' }}>XP POINTS</th>
                 </tr>
               </thead>
               <tbody>
-                {players.map((p) => (
-                  <tr key={p.id || p.rank}>
-                    <td className="mono" style={{ fontWeight: 700, color: p.rank === 1 ? 'var(--lime)' : 'var(--text)' }}>
-                      #{String(p.rank).padStart(2, '0')}
-                    </td>
-                    <td>
-                      <strong style={{ color: p.rank === 1 ? 'var(--lime)' : 'inherit' }}>{p.name}</strong>
-                    </td>
-                    <td>
-                      <span className="mono" style={{ fontSize: '0.76rem', opacity: 0.9 }}>
-                        {getDevTitle(p.level, p.xp)} (LVL {p.level})
-                      </span>
-                    </td>
-                    <td className="mono">{p.quizzesTaken} solved</td>
-                    <td className="mono" style={{ color: 'var(--lime)' }}>{p.accuracy}</td>
-                    <td className="mono">{p.badgeCount || 0} 🏅</td>
-                    <td className="mono" style={{ textAlign: 'right', fontWeight: 700, color: 'var(--lime)' }}>
-                      {p.xp.toLocaleString()} XP
-                    </td>
-                  </tr>
-                ))}
+                {players.map((p) => {
+                  const isTop = p.rank <= 3;
+                  return (
+                    <tr
+                      key={p.id}
+                      style={{
+                        borderBottom: '1px solid var(--border)',
+                        background: isTop ? 'rgba(200, 255, 55, 0.02)' : 'transparent',
+                      }}
+                    >
+                      <td style={{ padding: '16px 20px' }}>
+                        <span
+                          className="mono"
+                          style={{
+                            fontWeight: 700,
+                            color: p.rank === 1 ? 'var(--lime)' : p.rank <= 3 ? '#e5e7eb' : 'var(--text-muted)',
+                          }}
+                        >
+                          #{String(p.rank).padStart(2, '0')}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 20px', fontWeight: 600 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>{p.name}</span>
+                          {p.rank === 1 && <Crown size={14} color="#f59e0b" />}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <span className="badge" style={{ fontSize: '0.72rem' }}>
+                          {getDevTitle(p.level, p.xp)}
+                        </span>
+                      </td>
+                      <td className="mono" style={{ padding: '16px 20px', fontSize: '0.85rem' }}>
+                        {p.accuracy}
+                      </td>
+                      <td className="mono" style={{ padding: '16px 20px', fontSize: '0.85rem' }}>
+                        {p.quizzesTaken}
+                      </td>
+                      <td
+                        className="mono"
+                        style={{
+                          padding: '16px 20px',
+                          textAlign: 'right',
+                          fontWeight: 700,
+                          color: 'var(--lime)',
+                        }}
+                      >
+                        {p.xp.toLocaleString()} XP
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -164,4 +208,3 @@ export default function Leaderboard() {
     </div>
   );
 }
-

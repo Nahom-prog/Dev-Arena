@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/ToastContext';
 import FormattedQuestion from '../components/FormattedQuestion';
 import CodeSandboxModal from '../components/CodeSandboxModal';
+import { Trophy, Award, CheckCircle2, XCircle, Check, Terminal, Swords } from 'lucide-react';
 
 export default function DetailedResult() {
   const { quizId } = useParams();
@@ -112,14 +113,16 @@ export default function DetailedResult() {
         </p>
 
         <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to={`/quiz/${quizId}`} className="btn btn-primary btn-lg">
-            Retake Assessment ↺
+          <Link to={`/quiz/${quizId}`} className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <Swords size={18} />
+            <span>Retake Assessment</span>
           </Link>
           <Link to="/quizzes" className="btn btn-secondary btn-lg">
             Arena Challenges ↗
           </Link>
-          <Link to="/leaderboard" className="btn btn-secondary btn-lg">
-            View Leaderboard 🏆
+          <Link to="/leaderboard" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <Trophy size={18} />
+            <span>View Leaderboard</span>
           </Link>
         </div>
       </div>
@@ -135,8 +138,8 @@ export default function DetailedResult() {
             padding: '24px',
           }}
         >
-          <div className="eyebrow lime" style={{ marginBottom: '8px' }}>
-            ★ NEW ACHIEVEMENT UNLOCKED!
+          <div className="eyebrow lime" style={{ marginBottom: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Award size={15} /> NEW ACHIEVEMENT UNLOCKED!
           </div>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             {newBadges.map((b, i) => (
@@ -192,8 +195,18 @@ export default function DetailedResult() {
                     <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       Question {idx + 1}
                     </span>
-                    <span className={`badge ${isCorrect ? 'badge-lime' : 'badge-rose'}`}>
-                      {isCorrect ? '✓ CORRECT (+20 XP)' : '✕ MISSED (0 XP)'}
+                    <span className={`badge ${isCorrect ? 'badge-lime' : 'badge-rose'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      {isCorrect ? (
+                        <>
+                          <CheckCircle2 size={13} />
+                          <span>CORRECT (+20 XP)</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={13} />
+                          <span>MISSED (0 XP)</span>
+                        </>
+                      )}
                     </span>
                   </div>
 
@@ -239,8 +252,8 @@ export default function DetailedResult() {
                           </div>
 
                           {isTheRightAnswer && (
-                            <span className="mono" style={{ fontSize: '0.74rem', fontWeight: 700 }}>
-                              ✓ Correct Key
+                            <span className="mono" style={{ fontSize: '0.74rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={12} /> Correct Key
                             </span>
                           )}
                           {isSelectedByUser && !isTheRightAnswer && (
@@ -274,9 +287,10 @@ export default function DetailedResult() {
                           })
                         }
                         className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.74rem', padding: '5px 12px' }}
+                        style={{ fontSize: '0.74rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        🧪 Test in Interactive Sandbox
+                        <Terminal size={14} />
+                        <span>Test in Interactive Sandbox</span>
                       </button>
                     </div>
                   )}

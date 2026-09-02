@@ -2,6 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { isSoundEnabled, toggleSound } from '../utils/soundEffects';
+import {
+  Volume2,
+  VolumeX,
+  User,
+  PlusCircle,
+  Lock,
+  Code2,
+  LogOut,
+  ExternalLink,
+} from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, canCreateQuiz, logout } = useAuth();
@@ -33,7 +43,7 @@ export default function Navbar() {
   };
 
   const levelStr = String(user?.level || 1).padStart(2, '0');
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '👾';
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : null;
 
   return (
     <header className="nav-header">
@@ -65,7 +75,7 @@ export default function Navbar() {
         <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isAuthenticated ? (
             <>
-              {/* Level & XP Teller Pill */}
+              {/* Level & XP Status Pill */}
               <Link to="/profile" className="nav-level-pill" title="Player Rank & XP Progression">
                 <span
                   style={{
@@ -82,7 +92,7 @@ export default function Navbar() {
                 </span>
               </Link>
 
-              {/* Profile Picture Avatar & Dropdown */}
+              {/* Profile Avatar & Dropdown */}
               <div ref={dropdownRef} style={{ position: 'relative' }}>
                 <button
                   type="button"
@@ -91,7 +101,7 @@ export default function Navbar() {
                   title={`${user?.name || 'Developer'} Account`}
                   aria-expanded={dropdownOpen}
                 >
-                  {userInitial}
+                  {userInitial || <User size={18} />}
                   <span className="nav-avatar-online-dot" />
                 </button>
 
@@ -118,8 +128,11 @@ export default function Navbar() {
                       className="nav-dropdown-item"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      <span>👤 Player Dossier</span>
-                      <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>↗</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <User size={15} color="var(--lime)" />
+                        <span>Player Dossier</span>
+                      </div>
+                      <ExternalLink size={12} style={{ opacity: 0.6 }} />
                     </Link>
 
                     {canCreateQuiz ? (
@@ -128,7 +141,10 @@ export default function Navbar() {
                         className="nav-dropdown-item"
                         onClick={() => setDropdownOpen(false)}
                       >
-                        <span>➕ Author Challenge</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <PlusCircle size={15} color="var(--lime)" />
+                          <span>Author Challenge</span>
+                        </div>
                         <span className="badge badge-lime" style={{ fontSize: '0.62rem' }}>NEW</span>
                       </Link>
                     ) : (
@@ -138,7 +154,10 @@ export default function Navbar() {
                         onClick={() => setDropdownOpen(false)}
                         style={{ opacity: 0.75 }}
                       >
-                        <span>🔒 Creator Mode</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Lock size={15} color="var(--amber)" />
+                          <span>Creator Mode</span>
+                        </div>
                         <span className="mono" style={{ fontSize: '0.7rem', color: 'var(--amber)' }}>Lvl 3 req</span>
                       </Link>
                     )}
@@ -149,8 +168,11 @@ export default function Navbar() {
                         className="nav-dropdown-item"
                         onClick={() => setDropdownOpen(false)}
                       >
-                        <span>🛠️ Challenge Studio</span>
-                        <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>↗</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Code2 size={15} color="var(--lime)" />
+                          <span>Challenge Studio</span>
+                        </div>
+                        <ExternalLink size={12} style={{ opacity: 0.6 }} />
                       </Link>
                     )}
 
@@ -160,7 +182,10 @@ export default function Navbar() {
                       className="nav-dropdown-item"
                       onClick={handleToggleSound}
                     >
-                      <span>{soundOn ? '🔊 Sound Effects' : '🔇 Sound Effects'}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {soundOn ? <Volume2 size={15} color="var(--lime)" /> : <VolumeX size={15} color="var(--text-muted)" />}
+                        <span>Sound Effects</span>
+                      </div>
                       <span
                         className="mono"
                         style={{
@@ -181,7 +206,10 @@ export default function Navbar() {
                       className="nav-dropdown-item danger"
                       onClick={handleLogout}
                     >
-                      <span>⎋ Sign Out</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LogOut size={15} />
+                        <span>Sign Out</span>
+                      </div>
                     </button>
                   </div>
                 )}
@@ -194,10 +222,10 @@ export default function Navbar() {
                 type="button"
                 onClick={handleToggleSound}
                 className="btn btn-secondary btn-sm"
-                style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+                style={{ padding: '6px 10px' }}
                 title={soundOn ? 'Sound Effects Enabled' : 'Sound Effects Muted'}
               >
-                {soundOn ? '🔊' : '🔇'}
+                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
 
               <Link to="/login" className="btn btn-secondary btn-sm">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Terminal, Play, RotateCcw, X, Lightbulb } from 'lucide-react';
 
 /**
  * Executes a string of JavaScript code safely in the browser,
@@ -126,8 +127,9 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
             <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></span>
             <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }}></span>
             <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span>
-            <h3 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--lime)', fontFamily: 'DM Mono', marginLeft: '6px' }}>
-              🧪 {title}
+            <h3 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--lime)', fontFamily: 'DM Mono', marginLeft: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Terminal size={16} />
+              {title}
             </h3>
           </div>
 
@@ -139,11 +141,13 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
               border: 'none',
               color: 'var(--text-muted)',
               cursor: 'pointer',
-              fontSize: '1.1rem',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '4px',
             }}
             aria-label="Close Sandbox"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
@@ -158,17 +162,19 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
                 type="button"
                 onClick={handleReset}
                 className="btn btn-secondary btn-sm"
-                style={{ padding: '4px 10px', fontSize: '0.74rem' }}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
               >
-                ↺ Reset Code
+                <RotateCcw size={12} />
+                <span>Reset Code</span>
               </button>
               <button
                 type="button"
                 onClick={handleRun}
                 className="btn btn-primary btn-sm"
-                style={{ padding: '4px 14px', fontSize: '0.78rem' }}
+                style={{ padding: '4px 14px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
               >
-                ▶ Run Code
+                <Play size={12} fill="currentColor" />
+                <span>Run Code</span>
               </button>
             </div>
           </div>
@@ -252,8 +258,8 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
             alignItems: 'center',
           }}
         >
-          <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            💡 Tip: Modify variables and experiment with edge cases!
+          <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+            <Lightbulb size={12} color="var(--lime)" /> Tip: Modify variables and experiment with edge cases!
           </span>
           <button type="button" onClick={onClose} className="btn btn-secondary btn-sm">
             Close Sandbox

@@ -5,6 +5,17 @@ import { useToast } from '../context/ToastContext';
 import FormattedQuestion from '../components/FormattedQuestion';
 import CodeSandboxModal from '../components/CodeSandboxModal';
 import { playCorrectSound, playIncorrectSound, playStreakSound } from '../utils/soundEffects';
+import {
+  Flame,
+  Zap,
+  Terminal,
+  RotateCcw,
+  Swords,
+  Trophy,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+} from 'lucide-react';
 
 const PRACTICE_POOL = [
   {
@@ -171,9 +182,13 @@ export default function QuickPractice() {
               padding: '6px 12px',
               fontSize: '0.78rem',
               boxShadow: streak >= 3 ? '0 0 12px rgba(200, 255, 55, 0.3)' : 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
             }}
           >
-            🔥 {streak}x STREAK ({streakMultiplier} XP)
+            <Flame size={14} color="#f59e0b" />
+            <span>{streak}x STREAK ({streakMultiplier} XP)</span>
           </span>
           <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             {currentIdx + 1} / {PRACTICE_POOL.length}
@@ -244,9 +259,23 @@ export default function QuickPractice() {
                 marginBottom: '24px',
               }}
             >
-              <strong style={{ color: 'var(--lime)', display: 'block', marginBottom: '6px', font: '600 0.88rem "DM Mono", monospace' }}>
-                {selectedOpt === currentQ.correctIndex ? '✓ CORRECT ANSWER' : '✕ VERIFIED EXPLANATION:'}
-              </strong>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                {selectedOpt === currentQ.correctIndex ? (
+                  <>
+                    <CheckCircle2 size={16} color="var(--lime)" />
+                    <strong style={{ color: 'var(--lime)', font: '600 0.88rem "DM Mono", monospace' }}>
+                      CORRECT INSTINCT
+                    </strong>
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={16} color="var(--rose)" />
+                    <strong style={{ color: 'var(--rose)', font: '600 0.88rem "DM Mono", monospace' }}>
+                      VERIFIED EXPLANATION:
+                    </strong>
+                  </>
+                )}
+              </div>
               <p style={{ margin: 0, fontSize: '0.9rem', color: '#d1d5db', lineHeight: '1.55' }}>
                 {currentQ.explanation}
               </p>
@@ -257,9 +286,10 @@ export default function QuickPractice() {
                     type="button"
                     onClick={() => setShowSandbox(true)}
                     className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '4px 10px' }}
+                    style={{ fontSize: '0.74rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   >
-                    🧪 Run & Experiment in Sandbox
+                    <Terminal size={14} />
+                    <span>Run & Experiment in Sandbox</span>
                   </button>
                 </div>
               )}
@@ -271,15 +301,18 @@ export default function QuickPractice() {
               type="button"
               onClick={handleNext}
               className="btn btn-primary btn-lg"
-              style={{ width: '100%' }}
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
-              {currentIdx < PRACTICE_POOL.length - 1 ? 'Next Question →' : 'Complete Warm-Up ⚡'}
+              <span>{currentIdx < PRACTICE_POOL.length - 1 ? 'Next Question' : 'Complete Warm-Up'}</span>
+              {currentIdx < PRACTICE_POOL.length - 1 ? <ArrowRight size={18} /> : <Zap size={18} />}
             </button>
           )}
         </div>
       ) : (
         <div className="card" style={{ textAlign: 'center', padding: '48px 30px' }}>
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '14px' }}>⚡</span>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+            <Zap size={48} color="var(--lime)" />
+          </div>
           <span className="eyebrow lime">WARM-UP COMPLETE</span>
           <h2 style={{ fontSize: '2.2rem', margin: '8px 0 12px' }}>Instincts Calibrated!</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.96rem', marginBottom: '28px' }}>
@@ -287,14 +320,17 @@ export default function QuickPractice() {
           </p>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button type="button" onClick={handleRestart} className="btn btn-primary btn-lg">
-              Warm Up Again ↺
+            <button type="button" onClick={handleRestart} className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <RotateCcw size={18} />
+              <span>Warm Up Again</span>
             </button>
-            <Link to="/quizzes" className="btn btn-secondary btn-lg">
-              Enter Arena Challenges ⚔️
+            <Link to="/quizzes" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Swords size={18} />
+              <span>Enter Arena Challenges</span>
             </Link>
-            <Link to="/leaderboard" className="btn btn-secondary btn-lg">
-              Leaderboard 🏆
+            <Link to="/leaderboard" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <Trophy size={18} />
+              <span>Leaderboard</span>
             </Link>
           </div>
         </div>
