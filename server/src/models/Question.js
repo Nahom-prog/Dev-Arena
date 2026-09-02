@@ -43,4 +43,3 @@ questionSchema.index({ quizId: 1 });
 
 const Question = mongoose.model("Question", questionSchema);
 export default Question;
-         

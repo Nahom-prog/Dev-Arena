@@ -11,6 +11,7 @@ import {
   Code2,
   LogOut,
   ExternalLink,
+  ShieldAlert,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -197,6 +198,22 @@ export default function Navbar() {
                         {soundOn ? 'ON' : 'MUTED'}
                       </span>
                     </button>
+
+                    {/* Stealth God Mode Console Link (ONLY visible when logged in as admin) */}
+                    {user?.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="nav-dropdown-item"
+                        onClick={() => setDropdownOpen(false)}
+                        style={{ background: 'rgba(239, 68, 68, 0.08)' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <ShieldAlert size={15} color="#ef4444" />
+                          <span style={{ fontWeight: 700, color: '#ef4444' }}>God Mode Console</span>
+                        </div>
+                        <span className="mono" style={{ fontSize: '0.62rem', color: '#ef4444' }}>CLASSIFIED</span>
+                      </Link>
+                    )}
 
                     <div className="nav-dropdown-divider" />
 

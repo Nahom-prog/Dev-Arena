@@ -83,3 +83,28 @@ export const leaderboardApi = {
   getLeaderboard: () => request('/leaderboard'),
 };
 
+export const adminApi = {
+  getStats: () => request('/admin/stats'),
+  getUsers: (search = '') => request(`/admin/users${search ? `?search=${encodeURIComponent(search)}` : ''}`),
+  updateUser: (userId, payload) =>
+    request(`/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: (userId) =>
+    request(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    }),
+  getQuizzes: () => request('/admin/quizzes'),
+  toggleQuizStatus: (quizId, status) =>
+    request(`/admin/quizzes/${quizId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+  deleteQuiz: (quizId) =>
+    request(`/admin/quizzes/${quizId}`, {
+      method: 'DELETE',
+    }),
+};
+
+
