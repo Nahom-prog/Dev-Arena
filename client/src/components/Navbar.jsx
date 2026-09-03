@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { isSoundEnabled, toggleSound } from '../utils/soundEffects';
 import { calculateLevelData } from '../utils/levelEngine';
@@ -8,21 +8,31 @@ import {
   VolumeX,
   User,
   PlusCircle,
-  Lock,
-  Code2,
   LogOut,
   ExternalLink,
   ShieldAlert,
+  Menu,
+  X,
+  Swords,
+  Zap,
+  Trophy,
 } from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, canCreateQuiz, logout } = useAuth();
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Close dropdown on outside click
+  // Close dropdown and mobile menu on outside click or route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -35,6 +45,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     setDropdownOpen(false);
+    setMobileMenuOpen(false);
     logout();
     navigate('/login');
   };
@@ -52,10 +63,11 @@ export default function Navbar() {
   return (
     <header className="nav-header">
       <div className="wrap nav-inner">
-        <Link to="/" className="nav-brand">
+        <Link to="/" className="nav-brand" onClick={() => setMobileMenuOpen(false)}>
           DEV<span>.ARENA</span>
         </Link>
 
+        {/* Desktop Navigation Links */}
         <nav className="nav-links">
           <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             Overview
@@ -76,28 +88,21 @@ export default function Navbar() {
           )}
         </nav>
 
-        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        {/* Action Controls & Profile */}
+        <div className="nav-actions">
           {isAuthenticated ? (
             <>
-              {/* Level & XP Status Pill */}
+              {/* Responsive Level Pill: Collapses XP on mobile */}
               <Link to="/profile" className="nav-level-pill" title="Player Rank & XP Progression">
-                <span
-                  style={{
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    background: 'var(--lime)',
-                    boxShadow: '0 0 8px var(--lime)',
-                    display: 'inline-block',
-                  }}
-                />
-                <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', fontWeight: 700 }}>
-                  LVL {levelStr} • {(user?.xp || 0).toLocaleString()} XP
+                <span className="nav-level-pill-dot" />
+                <span className="mono nav-level-pill-text">
+                  LVL {levelStr}
+                  <span className="nav-level-pill-xp"> • {(user?.xp || 0).toLocaleString()} XP</span>
                 </span>
               </Link>
 
-              {/* Profile Avatar & Dropdown */}
-              <div ref={dropdownRef} style={{ position: 'relative' }}>
+              {/* Profile Avatar & Desktop Dropdown */}
+              <div ref={dropdownRef} className="nav-avatar-wrapper" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   className="nav-avatar-btn"
@@ -111,7 +116,6 @@ export default function Navbar() {
 
                 {dropdownOpen && (
                   <div className="nav-dropdown-menu">
-                    {/* User Info Header */}
                     <div className="nav-dropdown-header">
                       <div style={{ fontWeight: 600, fontSize: '0.94rem', color: '#f3f4f6', marginBottom: '2px' }}>
                         {user?.name || 'Developer Contender'}
@@ -126,138 +130,247 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    {/* Menu Items */}
                     <Link
                       to="/profile"
                       className="nav-dropdown-item"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <User size={15} color="var(--lime)" />
-                        <span>Player Profile</span>
-                      </div>
-                      <ExternalLink size={12} style={{ opacity: 0.6 }} />
+                      <User size={15} />
+                      <span>Player Profile</span>
                     </Link>
 
-                    {canCreateQuiz ? (
+                    {canCreateQuiz && (
                       <Link
                         to="/create-quiz"
                         className="nav-dropdown-item"
                         onClick={() => setDropdownOpen(false)}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <PlusCircle size={15} color="var(--lime)" />
-                          <span>Author Challenge</span>
-                        </div>
-                        <span className="badge badge-lime" style={{ fontSize: '0.62rem' }}>NEW</span>
-                      </Link>
-                    ) : (
-                      <Link
-                        to="/profile"
-                        className="nav-dropdown-item"
-                        onClick={() => setDropdownOpen(false)}
-                        style={{ opacity: 0.75 }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Lock size={15} color="var(--amber)" />
-                          <span>Creator Mode</span>
-                        </div>
-                        <span className="mono" style={{ fontSize: '0.7rem', color: 'var(--amber)' }}>Lvl 3 req</span>
+                        <PlusCircle size={15} />
+                        <span>Author Challenge</span>
                       </Link>
                     )}
 
-                    {canCreateQuiz && (
-                      <Link
-                        to="/studio"
-                        className="nav-dropdown-item"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Code2 size={15} color="var(--lime)" />
-                          <span>Challenge Studio</span>
-                        </div>
-                        <ExternalLink size={12} style={{ opacity: 0.6 }} />
-                      </Link>
-                    )}
-
-                    {/* Sound Effects Toggle Row */}
-                    <button
-                      type="button"
-                      className="nav-dropdown-item"
-                      onClick={handleToggleSound}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {soundOn ? <Volume2 size={15} color="var(--lime)" /> : <VolumeX size={15} color="var(--text-muted)" />}
-                        <span>Sound Effects</span>
-                      </div>
-                      <span
-                        className="mono"
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          color: soundOn ? 'var(--lime)' : 'var(--text-muted)',
-                        }}
-                      >
-                        {soundOn ? 'ON' : 'MUTED'}
-                      </span>
-                    </button>
-
-                    {/* Stealth God Mode Console Link (ONLY visible when logged in as admin) */}
                     {user?.role === 'admin' && (
                       <Link
                         to="/admin"
                         className="nav-dropdown-item"
                         onClick={() => setDropdownOpen(false)}
-                        style={{ background: 'rgba(239, 68, 68, 0.08)' }}
+                        style={{ color: '#ef4444' }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <ShieldAlert size={15} color="#ef4444" />
-                          <span style={{ fontWeight: 700, color: '#ef4444' }}>God Mode Console</span>
-                        </div>
-                        <span className="mono" style={{ fontSize: '0.62rem', color: '#ef4444' }}>CLASSIFIED</span>
+                        <ShieldAlert size={15} color="#ef4444" />
+                        <span>God Mode Console</span>
                       </Link>
                     )}
 
                     <div className="nav-dropdown-divider" />
 
-                    {/* Sign Out */}
+                    <button
+                      type="button"
+                      className="nav-dropdown-item"
+                      onClick={handleToggleSound}
+                    >
+                      {soundOn ? <Volume2 size={15} color="var(--lime)" /> : <VolumeX size={15} />}
+                      <span>Audio FX: {soundOn ? 'Enabled' : 'Muted'}</span>
+                    </button>
+
+                    <div className="nav-dropdown-divider" />
+
                     <button
                       type="button"
                       className="nav-dropdown-item danger"
                       onClick={handleLogout}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LogOut size={15} />
-                        <span>Sign Out</span>
-                      </div>
+                      <LogOut size={15} />
+                      <span>Sign Out</span>
                     </button>
                   </div>
                 )}
               </div>
             </>
           ) : (
-            <>
-              {/* Audio Toggle for Guests */}
+            <div className="desktop-auth-btns" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
                 onClick={handleToggleSound}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm sound-toggle-desktop"
                 style={{ padding: '6px 10px' }}
                 title={soundOn ? 'Sound Effects Enabled' : 'Sound Effects Muted'}
               >
-                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                {soundOn ? <Volume2 size={15} /> : <VolumeX size={15} />}
               </button>
-
               <Link to="/login" className="btn btn-secondary btn-sm">
                 Sign In
               </Link>
               <Link to="/register" className="btn btn-primary btn-sm">
                 Join Arena ↗
               </Link>
-            </>
+            </div>
           )}
+
+          {/* Mobile Hamburger Menu Toggle Button */}
+          <button
+            type="button"
+            className="mobile-hamburger-btn"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label="Toggle Mobile Navigation"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Sliding Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-nav-drawer">
+          {isAuthenticated && (
+            <div className="mobile-drawer-user-card">
+              <div style={{ fontWeight: 600, fontSize: '0.98rem', color: '#fff' }}>
+                {user?.name || 'Developer Contender'}
+              </div>
+              <div className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {user?.email}
+              </div>
+              <div style={{ marginTop: '8px' }}>
+                <span className="badge badge-lime" style={{ fontSize: '0.68rem', padding: '3px 10px' }}>
+                  DEV CONTENDER • LEVEL {levelStr} • {(user?.xp || 0).toLocaleString()} XP
+                </span>
+              </div>
+            </div>
+          )}
+
+          <nav className="mobile-drawer-links">
+            <NavLink
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+            >
+              <span>Overview</span>
+              <ExternalLink size={15} />
+            </NavLink>
+
+            <NavLink
+              to="/quizzes"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Swords size={16} color="var(--lime)" />
+                <span>Arena Challenges</span>
+              </div>
+              <ExternalLink size={15} />
+            </NavLink>
+
+            <NavLink
+              to="/practice"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Zap size={16} color="#fbbf24" />
+                <span>Quick Warm-Up</span>
+              </div>
+              <ExternalLink size={15} />
+            </NavLink>
+
+            <NavLink
+              to="/leaderboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Trophy size={16} color="#38bdf8" />
+                <span>Global Leaderboard</span>
+              </div>
+              <ExternalLink size={15} />
+            </NavLink>
+
+            {isAuthenticated && (
+              <NavLink
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <User size={16} />
+                  <span>Player Profile</span>
+                </div>
+                <ExternalLink size={15} />
+              </NavLink>
+            )}
+
+            {isAuthenticated && canCreateQuiz && (
+              <NavLink
+                to="/studio"
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) => `mobile-drawer-link ${isActive ? 'active' : ''}`}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PlusCircle size={16} color="var(--lime)" />
+                  <span>Challenge Studio</span>
+                </div>
+                <ExternalLink size={15} />
+              </NavLink>
+            )}
+
+            {isAuthenticated && user?.role === 'admin' && (
+              <NavLink
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mobile-drawer-link"
+                style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#ef4444' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldAlert size={16} color="#ef4444" />
+                  <span>God Mode Console</span>
+                </div>
+                <ExternalLink size={15} />
+              </NavLink>
+            )}
+          </nav>
+
+          {/* Sound FX Toggle in Mobile Drawer */}
+          <button
+            type="button"
+            onClick={handleToggleSound}
+            className="btn btn-secondary"
+            style={{ width: '100%', justifyContent: 'space-between', padding: '12px 18px', marginTop: '12px' }}
+          >
+            <span style={{ fontSize: '0.88rem' }}>Sound Effects: {soundOn ? 'Enabled' : 'Muted'}</span>
+            {soundOn ? <Volume2 size={16} color="var(--lime)" /> : <VolumeX size={16} />}
+          </button>
+
+          {/* Mobile Auth Actions */}
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="btn btn-secondary"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  borderColor: 'rgba(248, 113, 113, 0.3)',
+                  color: '#fca5a5',
+                  padding: '12px',
+                }}
+              >
+                <LogOut size={16} />
+                <span>Sign Out</span>
+              </button>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-secondary" style={{ padding: '12px' }}>
+                  Sign In
+                </Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary" style={{ padding: '12px' }}>
+                  Join Arena ↗
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
