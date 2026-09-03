@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     role: {
       type: String,
-      enum: ["developer", "teacher", "student", "admin"],
+      enum: ["developer", "author", "admin", "student", "teacher"],
       default: "developer",
     },
     xp: { type: Number, default: 0, min: 0 },

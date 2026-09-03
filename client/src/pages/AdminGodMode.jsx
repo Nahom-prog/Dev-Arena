@@ -272,12 +272,31 @@ export default function AdminGodMode() {
                         style={{
                           textTransform: 'uppercase',
                           fontSize: '0.66rem',
-                          background: u.role === 'admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255,255,255,0.06)',
-                          color: u.role === 'admin' ? '#ef4444' : 'inherit',
-                          border: u.role === 'admin' ? '1px solid #ef4444' : 'none',
+                          background:
+                            u.role === 'admin'
+                              ? 'rgba(239, 68, 68, 0.15)'
+                              : u.role === 'author' || u.role === 'teacher'
+                              ? 'rgba(56, 189, 248, 0.15)'
+                              : 'rgba(255,255,255,0.06)',
+                          color:
+                            u.role === 'admin'
+                              ? '#ef4444'
+                              : u.role === 'author' || u.role === 'teacher'
+                              ? '#38bdf8'
+                              : 'inherit',
+                          border:
+                            u.role === 'admin'
+                              ? '1px solid #ef4444'
+                              : u.role === 'author' || u.role === 'teacher'
+                              ? '1px solid rgba(56, 189, 248, 0.4)'
+                              : 'none',
                         }}
                       >
-                        {u.role}
+                        {u.role === 'admin'
+                          ? 'GOD MODE'
+                          : u.role === 'author' || u.role === 'teacher'
+                          ? 'CHALLENGE AUTHOR'
+                          : 'DEVELOPER'}
                       </span>
                     </td>
                     <td className="mono" style={{ padding: '14px 18px', color: 'var(--lime)' }}>
@@ -462,10 +481,9 @@ export default function AdminGodMode() {
                   onChange={(e) => setEditRole(e.target.value)}
                   className="input-field mono"
                 >
-                  <option value="student">Student / Contender</option>
-                  <option value="developer">Developer</option>
-                  <option value="teacher">Teacher / Author</option>
-                  <option value="admin">Admin (God Mode)</option>
+                  <option value="developer">Developer (Contender)</option>
+                  <option value="author">Challenge Author (Studio Access)</option>
+                  <option value="admin">Supreme Admin (God Mode)</option>
                 </select>
               </div>
             </div>

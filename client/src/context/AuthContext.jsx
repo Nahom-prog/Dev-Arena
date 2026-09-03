@@ -73,6 +73,7 @@ export function AuthProvider({ children }) {
     !!user &&
     (((user.level || 1) >= 3 && (user.quizzesTaken || 0) >= 3) ||
       user.role === 'admin' ||
+      user.role === 'author' ||
       user.role === 'teacher' ||
       user.canCreateQuiz);
 

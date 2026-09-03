@@ -78,7 +78,7 @@ export async function updateUser(req, res) {
     if (xp !== undefined) user.xp = Number(xp);
     if (level !== undefined) user.level = Number(level);
     if (streak !== undefined) user.streak = Number(streak);
-    if (role && ["student", "teacher", "developer", "admin"].includes(role)) {
+    if (role && ["developer", "author", "admin", "student", "teacher"].includes(role)) {
       user.role = role;
     }
 

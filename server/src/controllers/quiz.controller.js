@@ -15,6 +15,7 @@ export const createQuiz = async (req, res) => {
     const isEligible =
       ((user.level || 1) >= 3 && (user.quizzesTaken || 0) >= 3) ||
       user.role === "admin" ||
+      user.role === "author" ||
       user.role === "teacher";
 
     if (!isEligible) {
