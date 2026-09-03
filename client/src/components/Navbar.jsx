@@ -61,9 +61,10 @@ export default function Navbar() {
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : null;
 
   return (
-    <header className="nav-header">
-      <div className="wrap nav-inner">
-        <Link to="/" className="nav-brand" onClick={() => setMobileMenuOpen(false)}>
+    <>
+      <header className="nav-header">
+        <div className="wrap nav-inner">
+          <Link to="/" className="nav-brand" onClick={() => setMobileMenuOpen(false)}>
           DEV<span>.ARENA</span>
         </Link>
 
@@ -215,14 +216,15 @@ export default function Navbar() {
             aria-label="Toggle Mobile Navigation"
             aria-expanded={mobileMenuOpen}
           >
-            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileMenuOpen ? <X size={22} color="var(--lime)" /> : <Menu size={22} color="#f3f4f6" />}
           </button>
         </div>
       </div>
+    </header>
 
-      {/* Mobile Sliding Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="mobile-nav-drawer">
+    {/* Mobile Sliding Navigation Drawer (Placed OUTSIDE header so backdrop-filter does not trap it) */}
+    {mobileMenuOpen && (
+      <div className="mobile-nav-drawer">
           {isAuthenticated && (
             <div className="mobile-drawer-user-card">
               <div style={{ fontWeight: 600, fontSize: '0.98rem', color: '#fff' }}>
@@ -371,6 +373,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }

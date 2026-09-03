@@ -763,24 +763,23 @@ a {
   padding: 20px;
 }
 
-/* Tablets (<= 992px) */
+/* Tablets & Mobile Screens (<= 992px) */
 @media (max-width: 992px) {
-  .grid-4,
-  .profile-stats-grid,
-  .profile-badges-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Mobile Phones (<= 768px) */
-@media (max-width: 768px) {
   .nav-header {
     height: 64px;
   }
 
   .nav-inner {
     width: 100%;
-    padding: 0 4px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-size: 1.15rem;
+    flex-shrink: 1;
   }
 
   .nav-links,
@@ -790,18 +789,29 @@ a {
     display: none !important;
   }
 
+  .nav-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
   .mobile-hamburger-btn {
-    display: inline-flex;
-    padding: 7px 9px;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
   }
 
   .nav-avatar-btn {
     width: 32px;
     height: 32px;
-  }
-
-  .nav-actions {
-    gap: 8px;
+    flex-shrink: 0;
   }
 
   .mobile-nav-drawer {
@@ -812,10 +822,11 @@ a {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(11, 14, 12, 0.98);
-    backdrop-filter: blur(24px);
+    width: 100vw;
+    height: calc(100vh - 64px);
+    background: #080d0a;
     padding: 18px 16px 40px;
-    z-index: 9999;
+    z-index: 999999;
     overflow-y: auto;
     border-top: 1px solid var(--border);
   }
@@ -868,18 +879,18 @@ a {
   }
 
   .arena-hero {
-    padding: 36px 0 32px;
+    padding: 32px 0 28px;
   }
 
   .arena-hero-headline {
-    font-size: clamp(1.85rem, 6.8vw, 2.5rem);
-    line-height: 1.05;
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+    line-height: 1.08;
   }
 
   .arena-hero-desc {
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     line-height: 1.5;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
   /* Horizontal compact 3-column stats strip across screen */
@@ -888,8 +899,8 @@ a {
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 8px !important;
     text-align: center;
-    margin-top: 24px;
-    padding-top: 18px;
+    margin-top: 20px;
+    padding-top: 16px;
   }
 
   .stat-strip-num {
@@ -924,16 +935,11 @@ a {
 /* Small Phones (<= 480px) */
 @media (max-width: 480px) {
   .wrap {
-    padding: 0 14px;
+    padding: 0 12px;
   }
 
   .arena-hero-headline {
-    font-size: 1.85rem;
-  }
-
-  .btn-lg {
-    width: 100%;
-    justify-content: center;
+    font-size: 1.75rem;
   }
 }
 
