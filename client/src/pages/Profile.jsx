@@ -208,36 +208,36 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Stats Summary Grid */}
-      <div className="grid-4" style={{ marginBottom: '40px' }}>
-        <div className="card" style={{ padding: '20px' }}>
+      {/* Stats Summary Grid (2x2 Dashboard on Mobile) */}
+      <div className="profile-stats-grid" style={{ marginBottom: '40px' }}>
+        <div className="card profile-stat-card">
           <span className="eyebrow">Assessments Taken</span>
-          <h3 style={{ fontSize: '1.8rem', marginTop: '4px', fontFamily: 'DM Mono' }}>
+          <h3 className="profile-stat-val">
             {user.quizzesTaken || 0}
           </h3>
         </div>
-        <div className="card" style={{ padding: '20px' }}>
+        <div className="card profile-stat-card">
           <span className="eyebrow lime">Accuracy Rating</span>
-          <h3 style={{ fontSize: '1.8rem', marginTop: '4px', fontFamily: 'DM Mono', color: 'var(--lime)' }}>
+          <h3 className="profile-stat-val" style={{ color: 'var(--lime)' }}>
             {user.accuracyRating || '0.0%'}
           </h3>
         </div>
-        <div className="card" style={{ padding: '20px' }}>
+        <div className="card profile-stat-card">
           <span className="eyebrow">Arena Rank</span>
-          <h3 style={{ fontSize: '1.8rem', marginTop: '4px', fontFamily: 'DM Mono' }}>
+          <h3 className="profile-stat-val">
             {user.arenaRank || '#--'}
           </h3>
         </div>
-        <div className="card" style={{ padding: '20px' }}>
+        <div className="card profile-stat-card">
           <span className="eyebrow">Active Streak</span>
-          <h3 style={{ fontSize: '1.8rem', marginTop: '4px', fontFamily: 'DM Mono', color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Flame size={20} color="var(--lime)" />
+          <h3 className="profile-stat-val" style={{ color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Flame size={18} color="var(--lime)" />
             <span>{user.streak || 1}x</span>
           </h3>
         </div>
       </div>
 
-      {/* Achievements Badges */}
+      {/* Achievements Badges (2-Column Grid on Mobile) */}
       <div className="section-label">
         <div>
           <span className="eyebrow lime" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -248,38 +248,37 @@ export default function Profile() {
         <span>Unlocked in real-time as you solve challenges, maintain accuracy, and contribute.</span>
       </div>
 
-      <div className="grid-4" style={{ marginBottom: '48px' }}>
+      <div className="profile-badges-grid" style={{ marginBottom: '48px' }}>
         {ALL_DEV_BADGES.map((b) => {
           const isUnlocked = earnedBadgeIds.has(b.id);
           return (
             <article
               key={b.id}
-              className="card"
+              className="card profile-badge-card"
               style={{
-                padding: '20px',
                 opacity: isUnlocked ? 1 : 0.45,
                 borderColor: isUnlocked ? 'rgba(200, 255, 55, 0.4)' : 'var(--border)',
                 background: isUnlocked ? 'rgba(200, 255, 55, 0.04)' : 'rgba(255, 255, 255, 0.01)',
                 transition: 'all 0.2s ease',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '6px', background: isUnlocked ? 'rgba(200, 255, 55, 0.08)' : 'rgba(255, 255, 255, 0.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '6px', background: isUnlocked ? 'rgba(200, 255, 55, 0.08)' : 'rgba(255, 255, 255, 0.04)' }}>
                   {b.icon}
                 </div>
                 <span
                   className="mono"
                   style={{
-                    fontSize: '0.68rem',
+                    fontSize: '0.64rem',
                     color: isUnlocked ? 'var(--lime)' : 'var(--text-muted)',
-                    letterSpacing: '0.05em',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   {isUnlocked ? '✓ UNLOCKED' : 'LOCKED'}
                 </span>
               </div>
-              <h3 style={{ fontSize: '1.05rem', margin: '0 0 6px' }}>{b.title}</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.45', margin: 0 }}>
+              <h3 className="profile-badge-title" style={{ fontSize: '0.98rem', margin: '0 0 4px' }}>{b.title}</h3>
+              <p className="profile-badge-desc" style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: '1.4', margin: 0 }}>
                 {b.desc}
               </p>
             </article>
