@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="app-footer">
       <div className="wrap footer-inner">
         <div>
-          <span className="mono" style={{ color: 'var(--lime)', fontWeight: 700 }}>QUIZ.IO</span>
+          <span className="mono" style={{ color: 'var(--lime)', fontWeight: 700 }}>DEV.ARENA</span>
           <span style={{ margin: '0 8px', color: 'var(--border)' }}>—</span>
           <span>Automated evaluation & knowledge assessment engine.</span>
         </div>
