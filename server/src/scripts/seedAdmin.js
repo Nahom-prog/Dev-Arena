@@ -15,8 +15,6 @@ export async function ensureAdminExists() {
       admin.role = "admin";
       admin.passwordHash = passwordHash;
       if (!admin.name) admin.name = "Nahom (Supreme Architect)";
-      admin.level = 99;
-      admin.xp = Math.max(admin.xp || 0, 99999);
       await admin.save();
       console.log(`[GOD MODE] Master admin (${ADMIN_EMAIL}) verified and updated.`);
     } else {
@@ -25,9 +23,9 @@ export async function ensureAdminExists() {
         email: ADMIN_EMAIL,
         passwordHash,
         role: "admin",
-        level: 99,
-        xp: 99999,
-        streak: 99,
+        level: 1,
+        xp: 0,
+        streak: 1,
       });
       console.log(`[GOD MODE] Master admin (${ADMIN_EMAIL}) created successfully.`);
     }

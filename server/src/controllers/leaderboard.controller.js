@@ -2,7 +2,8 @@ import User from "../models/User.js";
 
 export const getLeaderboard = async (req, res) => {
   try {
-    const users = await User.find({})
+    // Only show real contenders on the public leaderboard (exclude stealth admin accounts)
+    const users = await User.find({ role: { $ne: "admin" } })
       .select("name email xp level streak quizzesTaken totalScore totalQuestionsAttempted badges")
       .sort({ xp: -1, totalScore: -1 })
       .limit(50);

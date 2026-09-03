@@ -249,19 +249,24 @@ async function seed() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✓ Connected to MongoDB");
 
-    // 1. Find or create master system arena user
+    // 1. Find or create master system arena user (benchmark author)
     let masterUser = await User.findOne({ email: "arena.master@devarena.io" });
     if (!masterUser) {
       masterUser = await User.create({
         name: "Dev Arena Official",
         email: "arena.master@devarena.io",
         passwordHash: "$2a$10$e7K00oXmXq2z4dZt1sS67OPR8lW9M4mNq9hL6sRk4zO3Q1t2e4w5q", // Mock bcrypt hash
-        role: "admin",
-        xp: 15400,
-        level: 10,
+        role: "author",
+        xp: 350,
+        level: 2,
         quizzesCreated: CHALLENGES.length,
       });
       console.log("✓ Created Arena Master user");
+    } else {
+      masterUser.role = "author";
+      masterUser.xp = 350;
+      masterUser.level = 2;
+      await masterUser.save();
     }
 
     // 2. Loop and upsert challenges

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminApi } from '../services/api';
+import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/ToastContext';
 import {
   ShieldAlert,
@@ -12,9 +13,12 @@ import {
   Search,
   RefreshCw,
   Edit3,
+  Crown,
 } from 'lucide-react';
 
 export default function AdminGodMode() {
+  const { user: currentAuthUser } = useAuth();
+  const isFounder = currentAuthUser?.email === 'abiynahom570@gmail.com';
   const { showToast } = useToast();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -260,75 +264,100 @@ export default function AdminGodMode() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
-                  <tr key={u._id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '14px 18px', fontWeight: 600 }}>{u.name}</td>
-                    <td className="mono" style={{ padding: '14px 18px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      {u.email}
-                    </td>
-                    <td style={{ padding: '14px 18px' }}>
-                      <span
-                        className="badge"
-                        style={{
-                          textTransform: 'uppercase',
-                          fontSize: '0.66rem',
-                          background:
-                            u.role === 'admin'
-                              ? 'rgba(239, 68, 68, 0.15)'
+                {users.map((u) => {
+                  const isThisUserFounder = u.email === 'abiynahom570@gmail.com';
+
+                  return (
+                    <tr key={u._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '14px 18px', fontWeight: 600 }}>{u.name}</td>
+                      <td className="mono" style={{ padding: '14px 18px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {u.email}
+                      </td>
+                      <td style={{ padding: '14px 18px' }}>
+                        {isThisUserFounder ? (
+                          <span
+                            className="badge"
+                            style={{
+                              textTransform: 'uppercase',
+                              fontSize: '0.66rem',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              color: '#f59e0b',
+                              border: '1px solid rgba(245, 158, 11, 0.4)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            <Crown size={12} color="#f59e0b" /> SUPREME FOUNDER
+                          </span>
+                        ) : (
+                          <span
+                            className="badge"
+                            style={{
+                              textTransform: 'uppercase',
+                              fontSize: '0.66rem',
+                              background:
+                                u.role === 'admin'
+                                  ? 'rgba(239, 68, 68, 0.15)'
+                                  : u.role === 'author' || u.role === 'teacher'
+                                  ? 'rgba(56, 189, 248, 0.15)'
+                                  : 'rgba(255,255,255,0.06)',
+                              color:
+                                u.role === 'admin'
+                                  ? '#ef4444'
+                                  : u.role === 'author' || u.role === 'teacher'
+                                  ? '#38bdf8'
+                                  : 'inherit',
+                              border:
+                                u.role === 'admin'
+                                  ? '1px solid #ef4444'
+                                  : u.role === 'author' || u.role === 'teacher'
+                                  ? '1px solid rgba(56, 189, 248, 0.4)'
+                                  : 'none',
+                            }}
+                          >
+                            {u.role === 'admin'
+                              ? 'GOD MODE'
                               : u.role === 'author' || u.role === 'teacher'
-                              ? 'rgba(56, 189, 248, 0.15)'
-                              : 'rgba(255,255,255,0.06)',
-                          color:
-                            u.role === 'admin'
-                              ? '#ef4444'
-                              : u.role === 'author' || u.role === 'teacher'
-                              ? '#38bdf8'
-                              : 'inherit',
-                          border:
-                            u.role === 'admin'
-                              ? '1px solid #ef4444'
-                              : u.role === 'author' || u.role === 'teacher'
-                              ? '1px solid rgba(56, 189, 248, 0.4)'
-                              : 'none',
-                        }}
-                      >
-                        {u.role === 'admin'
-                          ? 'GOD MODE'
-                          : u.role === 'author' || u.role === 'teacher'
-                          ? 'CHALLENGE AUTHOR'
-                          : 'DEVELOPER'}
-                      </span>
-                    </td>
-                    <td className="mono" style={{ padding: '14px 18px', color: 'var(--lime)' }}>
-                      LVL {u.level} • {u.xp?.toLocaleString()} XP
-                    </td>
-                    <td className="mono" style={{ padding: '14px 18px' }}>
-                      🔥 {u.streak || 0}
-                    </td>
-                    <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '8px' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(u)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ padding: '4px 8px' }}
-                          title="Modify Stats & Role"
-                        >
-                          <Edit3 size={13} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUser(u._id, u.name)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ padding: '4px 8px', color: '#ef4444' }}
-                          title="Purge Player Account"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                              ? 'CHALLENGE AUTHOR'
+                              : 'DEVELOPER'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="mono" style={{ padding: '14px 18px', color: 'var(--lime)' }}>
+                        LVL {u.level} • {u.xp?.toLocaleString()} XP
+                      </td>
+                      <td className="mono" style={{ padding: '14px 18px' }}>
+                        🔥 {u.streak || 0}
+                      </td>
+                      <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(u)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px' }}
+                            title="Modify Stats & Role"
+                          >
+                            <Edit3 size={13} />
+                          </button>
+                          {!isThisUserFounder && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(u._id, u.name)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '4px 8px', color: '#ef4444' }}
+                              title="Purge Player Account"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -483,7 +512,7 @@ export default function AdminGodMode() {
                 >
                   <option value="developer">Developer (Contender)</option>
                   <option value="author">Challenge Author (Studio Access)</option>
-                  <option value="admin">Supreme Admin (God Mode)</option>
+                  {isFounder && <option value="admin">Supreme Admin (God Mode)</option>}
                 </select>
               </div>
             </div>

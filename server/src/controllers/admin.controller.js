@@ -62,6 +62,8 @@ export async function getAllUsers(req, res) {
   }
 }
 
+const FOUNDER_EMAIL = "abiynahom570@gmail.com";
+
 /**
  * Modify any user's stats, level, role, or streak
  */
@@ -73,6 +75,20 @@ export async function updateUser(req, res) {
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // Founder Immunity Shield: Non-founders cannot modify the founder account
+    if (user.email === FOUNDER_EMAIL && req.user.email !== FOUNDER_EMAIL) {
+      return res.status(403).json({
+        message: "Immunity Shield: The Supreme Founder account cannot be modified by other admins.",
+      });
+    }
+
+    // Only the Supreme Founder can grant admin role to others
+    if (role === "admin" && req.user.email !== FOUNDER_EMAIL) {
+      return res.status(403).json({
+        message: "Hierarchy Protection: Only the Supreme Founder can appoint new Admins.",
+      });
     }
 
     if (xp !== undefined) user.xp = Number(xp);
@@ -97,15 +113,23 @@ export async function deleteUser(req, res) {
   try {
     const { userId } = req.params;
 
-    if (req.user._id.toString() === userId) {
-      return res.status(400).json({ message: "Cannot delete your own master admin account." });
-    }
-
-    const deleted = await User.findByIdAndDelete(userId);
-    if (!deleted) {
+    const userToDelete = await User.findById(userId);
+    if (!userToDelete) {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Founder Immunity Shield: Founder can never be deleted
+    if (userToDelete.email === FOUNDER_EMAIL) {
+      return res.status(403).json({
+        message: "Immunity Shield: The Supreme Founder account cannot be deleted.",
+      });
+    }
+
+    if (req.user._id.toString() === userId) {
+      return res.status(400).json({ message: "Cannot delete your own account." });
+    }
+
+    await User.findByIdAndDelete(userId);
     return res.json({ message: "User purged successfully" });
   } catch (err) {
     console.error("Admin delete user error:", err);
