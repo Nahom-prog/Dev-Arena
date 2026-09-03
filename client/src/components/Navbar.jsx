@@ -33,6 +33,18 @@ export default function Navbar() {
     setDropdownOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -208,6 +220,17 @@ export default function Navbar() {
             </div>
           )}
 
+          {/* Quick mobile Sign In button for guests */}
+          {!isAuthenticated && (
+            <Link
+              to="/login"
+              className="mobile-quick-signin btn btn-secondary btn-sm"
+              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+            >
+              Sign In
+            </Link>
+          )}
+
           {/* Mobile Hamburger Menu Toggle Button */}
           <button
             type="button"
@@ -224,7 +247,13 @@ export default function Navbar() {
 
     {/* Mobile Sliding Navigation Drawer (Placed OUTSIDE header so backdrop-filter does not trap it) */}
     {mobileMenuOpen && (
-      <div className="mobile-nav-drawer">
+      <>
+        <div
+          className="mobile-nav-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+        <div className="mobile-nav-drawer">
           {isAuthenticated && (
             <div className="mobile-drawer-user-card">
               <div style={{ fontWeight: 600, fontSize: '0.98rem', color: '#fff' }}>
@@ -372,7 +401,8 @@ export default function Navbar() {
             )}
           </div>
         </div>
-      )}
-    </>
-  );
+      </>
+    )}
+  </>
+);
 }

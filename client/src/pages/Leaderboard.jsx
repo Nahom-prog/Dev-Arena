@@ -135,8 +135,8 @@ export default function Leaderboard() {
           )}
 
           {/* Full Table */}
-          <div className="card" style={{ padding: '0', overflowX: 'auto' }}>
-            <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="card table-responsive" style={{ padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="leaderboard-table" style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
                   <th style={{ padding: '16px 20px', fontSize: '0.78rem' }}>RANK</th>

@@ -210,6 +210,24 @@ export default function ExamRoom() {
             </span>
           </div>
 
+          {/* Quick Mobile Question Selector Pills */}
+          <div className="mobile-question-pills">
+            {questions.map((q, idx) => {
+              const isAns = !!answers[q._id];
+              const isCur = currentIndex === idx;
+              return (
+                <button
+                  key={q._id || idx}
+                  type="button"
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`mobile-q-pill ${isCur ? 'active' : isAns ? 'answered' : ''}`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+
           <FormattedQuestion
             text={currentQ?.question}
             codeSnippet={currentQ?.codeSnippet}
