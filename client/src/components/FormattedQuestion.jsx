@@ -13,7 +13,7 @@ export default function FormattedQuestion({ text, codeSnippet, language = 'javas
   if (codeSnippet && typeof codeSnippet === 'string' && codeSnippet.trim()) {
     return (
       <div className="formatted-q-wrap">
-        <div style={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: '1.5', color: '#f9fafb', marginBottom: '12px' }}>
+        <div className="formatted-q-text">
           {renderInlineBackticks(text)}
         </div>
         <CodeBlock code={codeSnippet} language={language} />
@@ -61,16 +61,7 @@ export default function FormattedQuestion({ text, codeSnippet, language = 'javas
           return <CodeBlock key={idx} code={p.content} language={p.language} />;
         }
         return (
-          <div
-            key={idx}
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              lineHeight: '1.5',
-              color: '#f9fafb',
-              marginBottom: '8px',
-            }}
-          >
+          <div key={idx} className="formatted-q-text">
             {renderInlineBackticks(p.content)}
           </div>
         );

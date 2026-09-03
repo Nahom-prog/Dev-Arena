@@ -763,6 +763,31 @@ a {
   padding: 20px;
 }
 
+/* Exam Room Responsive Scaling */
+.exam-question-card {
+  padding: 28px;
+}
+
+.exam-briefing-card {
+  padding: 32px;
+}
+
+.exam-briefing-title {
+  font-size: clamp(1.6rem, 5vw, 2.3rem);
+}
+
+.exam-map-card {
+  padding: 20px;
+}
+
+.formatted-q-text {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #f9fafb;
+  margin-bottom: 12px;
+}
+
 /* Tablets & Mobile Screens (<= 992px) */
 @media (max-width: 992px) {
   .nav-header {
@@ -929,6 +954,42 @@ a {
 
   .exam-chamber-layout {
     grid-template-columns: 1fr;
+  }
+
+  .exam-question-card {
+    padding: 18px 16px !important;
+  }
+
+  .exam-briefing-card {
+    padding: 20px 16px !important;
+  }
+
+  .exam-map-card {
+    padding: 16px 14px !important;
+  }
+
+  .formatted-q-text {
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .exam-option-card {
+    padding: 11px 14px !important;
+    font-size: 0.88rem !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .exam-opt-badge {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .code-block-container {
+    margin: 10px 0 14px !important;
+    font-size: 0.8rem !important;
   }
 }
 

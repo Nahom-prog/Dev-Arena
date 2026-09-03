@@ -132,9 +132,9 @@ export default function ExamRoom() {
           ← Back to Catalog
         </Link>
 
-        <div className="card" style={{ padding: '36px', marginTop: '18px' }}>
+        <div className="card exam-briefing-card" style={{ marginTop: '18px' }}>
           <span className="eyebrow lime">ASSESSMENT PROTOCOLS</span>
-          <h1 style={{ fontSize: '2.5rem', margin: '10px 0 12px', letterSpacing: '-0.03em' }}>{quiz?.title}</h1>
+          <h1 className="exam-briefing-title" style={{ margin: '10px 0 12px', letterSpacing: '-0.03em' }}>{quiz?.title}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.96rem', lineHeight: '1.55', marginBottom: '28px' }}>
             {quiz?.description || 'This evaluation runs under precision countdown parameters. Verify your selections carefully before submission.'}
           </p>
@@ -200,7 +200,7 @@ export default function ExamRoom() {
 
       <div className="exam-chamber-layout">
         {/* Main Question Card */}
-        <div className="card" style={{ padding: '36px' }}>
+        <div className="card exam-question-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <span className="badge badge-lime">
               QUESTION {currentIndex + 1} OF {totalQ}
@@ -276,7 +276,7 @@ export default function ExamRoom() {
         </div>
 
         {/* Sidebar Question Map Palette */}
-        <div className="card" style={{ padding: '24px', height: 'fit-content' }}>
+        <div className="card exam-map-card" style={{ height: 'fit-content' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <span className="eyebrow">QUESTION MAP</span>
             <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)' }}>
