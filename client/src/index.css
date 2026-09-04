@@ -430,27 +430,36 @@ a {
 .exam-option-card {
   background: #080b09;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 16px 20px;
+  border-radius: 6px;
+  min-height: 54px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.75, 0.3, 1);
-  margin-bottom: 12px;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 10px;
   text-align: left;
   width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
-.exam-option-card:hover {
-  border-color: rgba(200, 255, 55, 0.35);
-  background: #0f1411;
+.exam-option-card:hover:not(:disabled) {
+  border-color: rgba(200, 255, 55, 0.4);
+  background: #111813;
+}
+
+.exam-option-card:active:not(:disabled) {
+  transform: scale(0.985);
+  background: #141f18;
 }
 
 .exam-option-card.selected {
   border-color: var(--lime);
-  background: rgba(200, 255, 55, 0.08);
-  box-shadow: 0 0 0 1px var(--lime);
+  background: radial-gradient(circle at left, rgba(200, 255, 55, 0.14), #111914);
+  box-shadow: 0 0 16px rgba(200, 255, 55, 0.12);
 }
 
 .exam-opt-badge {
@@ -465,6 +474,7 @@ a {
   font: 700 0.85rem "DM Mono", monospace;
   color: var(--text-muted);
   flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
 .exam-option-card.selected .exam-opt-badge {
@@ -1006,10 +1016,11 @@ a {
   }
 
   .exam-option-card {
-    padding: 11px 14px !important;
-    font-size: 0.88rem !important;
-    gap: 10px !important;
-    margin-bottom: 8px !important;
+    padding: 13px 14px !important;
+    min-height: 52px !important;
+    font-size: 0.9rem !important;
+    gap: 12px !important;
+    margin-bottom: 10px !important;
   }
 
   .exam-opt-badge {
@@ -1107,6 +1118,29 @@ a {
 
   .arena-hero-headline {
     font-size: 1.75rem;
+  }
+
+  /* Result Screen Stack */
+  .result-actions-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .result-actions-group .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 48px !important;
+  }
+
+  /* Compact score circle */
+  .score-circle {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .score-percentage {
+    font-size: 2.2rem !important;
   }
 }
 
@@ -1304,59 +1338,160 @@ a {
   margin: 6px 0;
 }
 
-.exam-option-card {
+/* Mobile Exam Chamber Bottom Sticky Action Dock */
+.mobile-exam-dock {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .exam-chamber-wrap {
+    padding-bottom: 96px !important;
+  }
+
+  .mobile-exam-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(8, 13, 10, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border-strong);
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 999;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  }
+
+  .mobile-exam-dock .btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+}
+
+/* Question Quality Voting Bar Mobile Responsiveness */
+.question-quality-bar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 16px 20px;
-  background: #111914;
-  border: 1px solid var(--border);
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
-  color: #f3f4f6;
-  font-family: inherit;
-  font-size: 0.95rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.exam-option-card:hover:not(:disabled) {
-  border-color: rgba(200, 255, 55, 0.45);
-  background: #15221b;
-  color: #ffffff;
-  transform: translateX(4px);
-}
-
-.exam-option-card.selected {
-  border-color: var(--lime);
-  background: radial-gradient(circle at left, rgba(200, 255, 55, 0.15), #121c16);
-  color: #ffffff;
-  box-shadow: 0 0 16px rgba(200, 255, 55, 0.12);
-}
-
-.exam-opt-badge {
+.question-quality-actions {
   display: flex;
+  gap: 8px;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--lime);
-  font-family: 'DM Mono', monospace;
-  font-weight: 700;
-  font-size: 0.8rem;
-  transition: all 0.2s ease;
 }
 
-.exam-option-card.selected .exam-opt-badge {
-  background: var(--lime);
-  color: #080b09;
-  border-color: var(--lime);
+@media (max-width: 640px) {
+  .question-quality-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .question-quality-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px !important;
+    width: 100%;
+  }
+
+  .question-quality-actions .btn {
+    min-height: 40px;
+    padding: 6px 4px !important;
+    font-size: 0.78rem !important;
+    justify-content: center;
+  }
+}
+
+/* Mobile Leaderboard Cards (< 640px) */
+.mobile-leaderboard-cards {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .leaderboard-table-desktop {
+    display: none !important;
+  }
+
+  .mobile-leaderboard-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobile-lb-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #0d1310;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: border-color 0.2s ease;
+  }
+
+  .mobile-lb-card.top-1 {
+    border-color: var(--lime);
+    background: linear-gradient(135deg, rgba(200, 255, 55, 0.08), #0d1310);
+    box-shadow: 0 0 16px rgba(200, 255, 55, 0.08);
+  }
+
+  .mobile-lb-card.top-podium {
+    border-color: rgba(200, 255, 55, 0.25);
+  }
+
+  .mobile-lb-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mobile-lb-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 0.98rem;
+  }
+
+  .mobile-lb-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    min-width: 28px;
+  }
+
+  .mobile-lb-rank.gold {
+    color: var(--lime);
+  }
+
+  .mobile-lb-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 8px;
+  }
 }
 
 .exam-q-prompt {

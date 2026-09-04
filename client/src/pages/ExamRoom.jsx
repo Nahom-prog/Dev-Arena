@@ -236,7 +236,7 @@ export default function ExamRoom() {
   const currentSelected = currentQ ? answers[currentQ._id] : null;
 
   return (
-    <div className="exam-chamber-page wrap" style={{ padding: '30px 0 60px' }}>
+    <div className="exam-chamber-page exam-chamber-wrap wrap" style={{ padding: '30px 0 60px' }}>
       {/* Top Session Bar */}
       <div className="card exam-chamber-top">
         <div>
@@ -289,7 +289,7 @@ export default function ExamRoom() {
           />
 
           {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '36px', marginTop: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '28px', marginTop: '20px' }}>
             {currentQ?.options?.map((opt, idx) => {
               const isSelected = currentSelected === opt;
               const isCodeLike = opt.includes('`') || opt.includes('(') || opt.includes('=>') || opt.includes('{');
@@ -316,29 +316,16 @@ export default function ExamRoom() {
           </div>
 
           {/* Question Quality Feedback Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 14px',
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              marginBottom: '24px',
-              flexWrap: 'wrap',
-              gap: '8px',
-            }}
-          >
+          <div className="question-quality-bar">
             <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               QUESTION QUALITY
             </span>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div className="question-quality-actions">
               <button
                 type="button"
                 onClick={() => handleVoteQuestion(currentQ?._id, 'up')}
                 className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'up' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 title="Accurate and well-written"
               >
                 <ThumbsUp size={12} />
@@ -349,7 +336,7 @@ export default function ExamRoom() {
                 type="button"
                 onClick={() => handleVoteQuestion(currentQ?._id, 'down')}
                 className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'down' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 title="Confusing, typo, or poor wording"
               >
                 <ThumbsDown size={12} />
@@ -360,7 +347,7 @@ export default function ExamRoom() {
                 type="button"
                 onClick={() => handleOpenReport(currentQ?._id)}
                 className="btn btn-secondary btn-sm"
-                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
+                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
                 title="Report wrong answer, broken code, or typo"
               >
                 <Flag size={12} />
@@ -369,8 +356,8 @@ export default function ExamRoom() {
             </div>
           </div>
 
-          {/* Action Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+          {/* Action Bar / Mobile Sticky Dock */}
+          <div className="mobile-exam-dock">
             <button
               type="button"
               disabled={currentIndex === 0}
@@ -393,9 +380,9 @@ export default function ExamRoom() {
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmitQuiz}
-                className="btn btn-primary btn-lg"
+                className="btn btn-primary"
               >
-                {submitting ? 'Evaluating...' : 'Complete & Submit Assessment ↗'}
+                {submitting ? 'Evaluating...' : 'Complete & Submit ↗'}
               </button>
             )}
           </div>

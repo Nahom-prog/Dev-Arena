@@ -167,7 +167,7 @@ export default function DetailedResult() {
           {tier.desc}
         </p>
 
-        <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="result-actions-group" style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to={`/quiz/${quizId}`} className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
             <Swords size={18} />
             <span>Retake Assessment</span>
@@ -352,47 +352,43 @@ export default function DetailedResult() {
 
                   {/* Community Question Feedback Strip */}
                   <div
+                    className="question-quality-bar"
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
                       marginTop: '14px',
                       paddingTop: '10px',
                       borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                      flexWrap: 'wrap',
-                      gap: '8px',
                     }}
                   >
                     <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                       RATE THIS QUESTION
                     </span>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div className="question-quality-actions">
                       <button
                         type="button"
                         onClick={() => handleVote(q._id, 'up')}
                         className={`btn btn-sm ${feedbackVotes[q._id] === 'up' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                         title="Good question"
                       >
-                        <ThumbsUp size={11} /> Good
+                        <ThumbsUp size={12} /> Good
                       </button>
                       <button
                         type="button"
                         onClick={() => handleVote(q._id, 'down')}
                         className={`btn btn-sm ${feedbackVotes[q._id] === 'down' ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                         title="Needs improvement"
                       >
-                        <ThumbsDown size={11} /> Needs Work
+                        <ThumbsDown size={12} /> Needs Work
                       </button>
                       <button
                         type="button"
                         onClick={() => handleOpenReport(q._id)}
                         className="btn btn-secondary btn-sm"
-                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}
+                        style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}
                         title="Report issue"
                       >
-                        <Flag size={11} /> Report
+                        <Flag size={12} /> Report
                       </button>
                     </div>
                   </div>

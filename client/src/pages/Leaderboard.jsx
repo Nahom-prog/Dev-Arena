@@ -250,8 +250,8 @@ export default function Leaderboard() {
             </div>
           )}
 
-          {/* Full Table */}
-          <div className="card table-responsive" style={{ padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          {/* Full Table (Desktop) */}
+          <div className="card table-responsive leaderboard-table-desktop" style={{ padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table className="leaderboard-table" style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
@@ -326,6 +326,52 @@ export default function Leaderboard() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Contender Cards (< 640px) */}
+          <div className="mobile-leaderboard-cards">
+            {players.map((p) => {
+              const isTop1 = p.rank === 1;
+              const isPodium = p.rank <= 3;
+              return (
+                <div
+                  key={p.id}
+                  className={`mobile-lb-card ${isTop1 ? 'top-1' : isPodium ? 'top-podium' : ''}`}
+                >
+                  <div className="mobile-lb-top">
+                    <div className="mobile-lb-identity">
+                      <span className={`mobile-lb-rank ${isTop1 ? 'gold' : ''}`}>
+                        #{String(p.rank).padStart(2, '0')}
+                      </span>
+                      <span>{p.name}</span>
+                      {p.country === 'Ethiopia' && (
+                        <span title="Ethiopian Developer" style={{ fontSize: '0.95rem' }}>🇪🇹</span>
+                      )}
+                      {isTop1 && <Crown size={14} color="#f59e0b" />}
+                    </div>
+                    <div className="mono" style={{ fontWeight: 800, color: 'var(--lime)', fontSize: '1.05rem' }}>
+                      {p.xp.toLocaleString()} XP
+                    </div>
+                  </div>
+
+                  <div className="mobile-lb-meta">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="badge" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                        {getDevTitle(p.level, p.xp)}
+                      </span>
+                      {p.affiliation && (
+                        <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,255,255,0.06)' }}>
+                          {p.affiliation}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      Accuracy: <strong style={{ color: '#fff' }}>{p.accuracy}</strong> • {p.quizzesTaken} Solved
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>
       )}
