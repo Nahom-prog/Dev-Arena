@@ -17,6 +17,8 @@ import {
   GitBranch,
   Flame,
   Award,
+  Globe,
+  Check,
 } from 'lucide-react';
 
 const ALL_DEV_BADGES = [
@@ -73,6 +75,10 @@ const ALL_DEV_BADGES = [
 export default function Profile() {
   const { user: authUser, refreshUser } = useAuth();
   const [profileData, setProfileData] = useState(authUser);
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [affiliationInput, setAffiliationInput] = useState('');
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -81,6 +87,8 @@ export default function Profile() {
         setLoading(true);
         const data = await authApi.getMe();
         setProfileData(data);
+        setSelectedCountry(data.country || '');
+        setAffiliationInput(data.affiliation || '');
         if (refreshUser) refreshUser();
       } catch (err) {
         console.error('Failed to load profile data', err);
@@ -91,6 +99,24 @@ export default function Profile() {
 
     fetchLatestProfile();
   }, [refreshUser]);
+
+  const handleSaveProfileSettings = async (e) => {
+    e.preventDefault();
+    try {
+      setSavingSettings(true);
+      await authApi.updateProfile({
+        country: selectedCountry,
+        affiliation: affiliationInput,
+      });
+      setSettingsSaved(true);
+      if (refreshUser) refreshUser();
+      setTimeout(() => setSettingsSaved(false), 3500);
+    } catch (err) {
+      console.error('Failed to save profile settings', err);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const user = profileData || authUser || {};
   const totalXp = user.xp || 0;
@@ -235,6 +261,77 @@ export default function Profile() {
             <span>{user.streak || 1}x</span>
           </h3>
         </div>
+      </div>
+
+      {/* Regional Representation & Leaderboard Settings Card */}
+      <div className="card" style={{ marginBottom: '40px', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+          <div>
+            <span className="eyebrow lime" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Globe size={14} /> REGIONAL LEADERBOARD & AFFILIATION
+            </span>
+            <h3 style={{ margin: '4px 0 0', fontSize: '1.2rem' }}>Location & Campus Settings</h3>
+          </div>
+          {settingsSaved && (
+            <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <Check size={12} /> Profile Saved
+            </span>
+          )}
+        </div>
+
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: '0 0 20px', lineHeight: '1.5' }}>
+          Set your country to represent on regional leaderboards. Selecting <strong>Ethiopia</strong> displays your standing on the official <strong>🇪🇹 Ethiopian Devs Leaderboard</strong>.
+        </p>
+
+        <form onSubmit={handleSaveProfileSettings} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              REPRESENTING COUNTRY:
+            </label>
+            <select
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className="input-field"
+              style={{ width: '100%' }}
+            >
+              <option value="">Worldwide / None</option>
+              <option value="Ethiopia">🇪🇹 Ethiopia</option>
+              <option value="Kenya">🇰🇪 Kenya</option>
+              <option value="Nigeria">🇳🇬 Nigeria</option>
+              <option value="Rwanda">🇷🇼 Rwanda</option>
+              <option value="Ghana">🇬🇭 Ghana</option>
+              <option value="United States">🇺🇸 United States</option>
+              <option value="United Kingdom">🇬🇧 United Kingdom</option>
+              <option value="Germany">🇩🇪 Germany</option>
+              <option value="Other">🌍 Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              CAMPUS / COMMUNITY (OPTIONAL):
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. AAU, ALX, ASTU, Addis Ababa"
+              value={affiliationInput}
+              onChange={(e) => setAffiliationInput(e.target.value)}
+              className="input-field"
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className="btn btn-primary"
+              style={{ width: '100%', height: '42px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            >
+              {savingSettings ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Achievements Badges (2-Column Grid on Mobile) */}

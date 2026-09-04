@@ -4,7 +4,7 @@ import { quizApi, questionApi } from '../services/api';
 import CircularTimer from '../components/CircularTimer';
 import FormattedQuestion from '../components/FormattedQuestion';
 import { playCorrectSound } from '../utils/soundEffects';
-import { ThumbsUp, ThumbsDown, Flag, AlertCircle } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Flag, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const shuffleArray = (arr) => {
   if (!arr || !Array.isArray(arr)) return [];
@@ -60,8 +60,9 @@ export default function ExamRoom() {
   // Community feedback & report state
   const [feedbackVotes, setFeedbackVotes] = useState({});
   const [reportingQId, setReportingQId] = useState(null);
-  const [reportReason, setReportReason] = useState('');
+  const [reportReason, setReportReason] = useState('Typo or misleading wording');
   const [isReporting, setIsReporting] = useState(false);
+  const [reportConfirmed, setReportConfirmed] = useState(false);
 
   useEffect(() => {
     const fetchQuizData = async () => {
@@ -114,10 +115,10 @@ export default function ExamRoom() {
       setIsReporting(true);
       await quizApi.reportQuestion(reportingQId, reportReason.trim());
       setReportingQId(null);
-      setReportReason('');
-      alert('Report dispatched to God Mode moderation console.');
+      setReportReason('Typo or misleading wording');
+      setReportConfirmed(true);
     } catch (err) {
-      alert(err.message || 'Failed to submit report');
+      setError(err.message || 'Failed to submit report');
     } finally {
       setIsReporting(false);
     }
@@ -498,7 +499,7 @@ export default function ExamRoom() {
             </div>
 
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
-              Help maintain platform engineering standards. Flags are prioritized directly in the God Mode review console.
+              Help maintain platform engineering quality. Our moderation team reviews every reported question.
             </p>
 
             <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
@@ -535,6 +536,49 @@ export default function ExamRoom() {
                 {isReporting ? 'Submitting...' : 'Submit Flag 🚩'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Centered In-App Report Confirmation Popup */}
+      {reportConfirmed && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '20px',
+          }}
+          onClick={() => setReportConfirmed(false)}
+        >
+          <div
+            className="card"
+            style={{ width: '100%', maxWidth: '400px', padding: '28px', textAlign: 'center' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <CheckCircle2 size={28} color="#10b981" />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>Report Submitted</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: '1.5', margin: '0 0 20px' }}>
+              Thank you for helping keep question quality high. Our moderation team will review this challenge.
+            </p>
+            <button
+              type="button"
+              onClick={() => setReportConfirmed(false)}
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+            >
+              Continue Challenge
+            </button>
           </div>
         </div>
       )}

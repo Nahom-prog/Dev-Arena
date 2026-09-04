@@ -28,6 +28,11 @@ export default function DetailedResult() {
   const xpStatusNote = result.xpStatusNote || '';
   const newBadges = result.newBadges || result.badgesAwarded || [];
 
+  const [reportingQId, setReportingQId] = useState(null);
+  const [reportReason, setReportReason] = useState('Typo or misleading wording');
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportConfirmed, setReportConfirmed] = useState(false);
+
   const notifiedRef = useRef(false);
 
   const handleVote = async (qId, voteType) => {
@@ -41,14 +46,23 @@ export default function DetailedResult() {
     }
   };
 
-  const handleReport = async (qId) => {
-    const reason = window.prompt('Report question issue (Typo, Wrong Answer, Broken Code, Spam):', 'Typo or misleading wording');
-    if (!reason || !reason.trim()) return;
+  const handleOpenReport = (qId) => {
+    setReportingQId(qId);
+    setReportReason('Typo or misleading wording');
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportingQId || !reportReason.trim()) return;
     try {
-      await quizApi.reportQuestion(qId, reason.trim());
-      showToast({ title: 'Report Dispatched', message: 'Logged for review in God Mode.', icon: '🚩' });
+      setIsReporting(true);
+      await quizApi.reportQuestion(reportingQId, reportReason.trim());
+      setReportingQId(null);
+      setReportReason('Typo or misleading wording');
+      setReportConfirmed(true);
     } catch (err) {
       showToast({ title: 'Report failed', message: err.message, type: 'error' });
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -373,7 +387,7 @@ export default function DetailedResult() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleReport(q._id)}
+                        onClick={() => handleOpenReport(q._id)}
                         className="btn btn-secondary btn-sm"
                         style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}
                         title="Report issue"
@@ -397,6 +411,128 @@ export default function DetailedResult() {
           title={sandboxSnippet.title}
           onClose={() => setSandboxSnippet(null)}
         />
+      )}
+
+      {/* Question Issue Report Modal */}
+      {reportingQId && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+          onClick={() => setReportingQId(null)}
+        >
+          <div
+            className="card"
+            style={{ width: '100%', maxWidth: '440px', padding: '24px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem' }}>
+                <Flag size={16} color="#ef4444" /> Report Question Issue
+              </h3>
+              <button
+                type="button"
+                onClick={() => setReportingQId(null)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+              Help maintain platform engineering quality. Our moderation team reviews every reported question.
+            </p>
+
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              REASON FOR REPORT:
+            </label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="input-field"
+              style={{ marginBottom: '14px', width: '100%' }}
+            >
+              <option value="Typo or misleading wording">Typo or misleading wording</option>
+              <option value="Objectively wrong answer marked correct">Objectively wrong answer marked correct</option>
+              <option value="Code snippet contains syntax error / won't run">Code snippet contains syntax error / won't run</option>
+              <option value="Multiple answers are technically correct">Multiple answers are technically correct</option>
+              <option value="Duplicate or spam question">Duplicate or spam question</option>
+            </select>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setReportingQId(null)}
+                className="btn btn-secondary btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isReporting}
+                onClick={handleSubmitReport}
+                className="btn btn-primary btn-sm"
+                style={{ background: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+              >
+                {isReporting ? 'Submitting...' : 'Submit Flag 🚩'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Centered In-App Report Confirmation Popup */}
+      {reportConfirmed && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '20px',
+          }}
+          onClick={() => setReportConfirmed(false)}
+        >
+          <div
+            className="card"
+            style={{ width: '100%', maxWidth: '400px', padding: '28px', textAlign: 'center' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <CheckCircle2 size={28} color="#10b981" />
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>Report Submitted</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: '1.5', margin: '0 0 20px' }}>
+              Thank you for helping keep question quality high. Our moderation team will review this challenge.
+            </p>
+            <button
+              type="button"
+              onClick={() => setReportConfirmed(false)}
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -162,8 +162,22 @@ export default function Leaderboard() {
         </div>
       ) : players.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '50px' }}>
-          <h3>No contenders on the board yet!</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Be the first developer to complete a challenge and claim #1 spot.</p>
+          {activeFilter === 'ethiopia' ? (
+            <>
+              <h3>No confirmed Ethiopian contenders on this board yet!</h3>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '460px', margin: '8px auto 20px' }}>
+                Set your country to Ethiopia in your Profile Settings to represent on this regional leaderboard.
+              </p>
+              <Link to="/profile" className="btn btn-secondary btn-sm">
+                Set Country in Profile Settings ↗
+              </Link>
+            </>
+          ) : (
+            <>
+              <h3>No contenders on the board yet!</h3>
+              <p style={{ color: 'var(--text-muted)' }}>Be the first developer to complete a challenge and claim #1 spot.</p>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -274,7 +288,7 @@ export default function Leaderboard() {
                       <td style={{ padding: '16px 20px', fontWeight: 600 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <span>{p.name}</span>
-                          {(p.country === 'Ethiopia' || !p.country) && (
+                          {p.country === 'Ethiopia' && (
                             <span title="Ethiopian Developer" style={{ fontSize: '0.9rem' }}>🇪🇹</span>
                           )}
                           {p.affiliation && (

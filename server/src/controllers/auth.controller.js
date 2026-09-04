@@ -147,11 +147,37 @@ export const me = async (req, res) => {
       accuracyRating: `${accuracy}%`,
       arenaRank: `#${rank}`,
       canCreateQuiz,
+      country: user.country || "",
+      affiliation: user.affiliation || "",
       badges: user.badges || [],
       recentAttempts: (user.recentAttempts || []).slice(-10).reverse(),
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { country, affiliation } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (country !== undefined) user.country = country ? country.trim() : "";
+    if (affiliation !== undefined) user.affiliation = affiliation ? affiliation.trim() : "";
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      country: user.country,
+      affiliation: user.affiliation,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to update profile" });
   }
 };

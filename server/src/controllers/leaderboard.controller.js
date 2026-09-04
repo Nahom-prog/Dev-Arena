@@ -6,10 +6,7 @@ export const getLeaderboard = async (req, res) => {
     const query = { role: { $ne: "admin" } };
 
     if (filter === "ethiopia") {
-      query.$or = [
-        { country: "Ethiopia" },
-        { country: { $exists: false } },
-      ];
+      query.country = "Ethiopia";
     }
 
     if (affiliation) {
@@ -32,7 +29,7 @@ export const getLeaderboard = async (req, res) => {
         rank: index + 1,
         id: u._id,
         name: u.name,
-        country: u.country || "Ethiopia",
+        country: u.country || "",
         affiliation: u.affiliation || "",
         xp: u.xp || 0,
         level: u.level || 1,

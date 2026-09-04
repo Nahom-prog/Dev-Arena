@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
     totalScore: { type: Number, default: 0, min: 0 },
     totalQuestionsAttempted: { type: Number, default: 0, min: 0 },
     lastDailyCompletedDate: { type: Date, default: null },
-    country: { type: String, default: "Ethiopia", trim: true },
+    country: { type: String, default: "", trim: true },
     affiliation: { type: String, default: "", trim: true },
     badges: { type: [badgeSchema], default: [] },
     recentAttempts: { type: [recentAttemptSchema], default: [] },

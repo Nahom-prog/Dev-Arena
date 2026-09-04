@@ -108,26 +108,6 @@ export default function ExploreHome() {
             )}
           </div>
 
-          {/* Quick Skill Tracks Strip */}
-          <div style={{ marginTop: '36px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-            <Link to="/quizzes?difficulty=easy" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #10b981' }}>
-              <span className="mono" style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700, display: 'block' }}>🟢 TIER 1</span>
-              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Beginner Dev</span>
-            </Link>
-            <Link to="/quizzes?difficulty=mid" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid var(--lime)' }}>
-              <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--lime)', fontWeight: 700, display: 'block' }}>🟡 TIER 2</span>
-              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Intermediate</span>
-            </Link>
-            <Link to="/quizzes?difficulty=hard" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #f59e0b' }}>
-              <span className="mono" style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: 700, display: 'block' }}>🟠 TIER 3</span>
-              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Advanced Dev</span>
-            </Link>
-            <Link to="/quizzes?difficulty=very%20hard" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #a855f7' }}>
-              <span className="mono" style={{ fontSize: '0.68rem', color: '#a855f7', fontWeight: 700, display: 'block' }}>🔴 TIER 4</span>
-              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Expert Architect</span>
-            </Link>
-          </div>
-
           {/* Stats Strip */}
           <div className="arena-stats-strip">
             <div className="stat-strip-item">
