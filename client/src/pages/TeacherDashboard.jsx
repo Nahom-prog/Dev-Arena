@@ -63,7 +63,7 @@ export default function TeacherDashboard() {
       {error && <div className="alert-box error">{error}</div>}
 
       {/* Metrics */}
-      <div className="grid-3" style={{ marginBottom: '36px' }}>
+      <div className="teacher-stats-grid">
         <div className="card">
           <span className="eyebrow">AUTHORED CHALLENGES</span>
           <h3 style={{ fontSize: '2.4rem', margin: '8px 0 0', fontFamily: 'DM Mono' }}>{quizzes.length}</h3>

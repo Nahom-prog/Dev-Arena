@@ -236,7 +236,7 @@ export default function ExamRoom() {
   const currentSelected = currentQ ? answers[currentQ._id] : null;
 
   return (
-    <div className="exam-chamber-page exam-chamber-wrap wrap" style={{ padding: '30px 0 60px' }}>
+    <div className="exam-chamber-page wrap" style={{ padding: '30px 0 60px' }}>
       {/* Top Session Bar */}
       <div className="card exam-chamber-top">
         <div>
@@ -255,7 +255,7 @@ export default function ExamRoom() {
       <div className="exam-chamber-layout">
         {/* Main Question Card */}
         <div className="card exam-question-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '8px' }}>
             <span className="badge badge-lime">
               QUESTION {currentIndex + 1} OF {totalQ}
             </span>
@@ -303,9 +303,13 @@ export default function ExamRoom() {
                 >
                   <span className="exam-opt-badge">{String.fromCharCode(65 + idx)}</span>
                   <span
+                    className="exam-opt-text"
                     style={{
                       fontSize: '0.94rem',
                       fontFamily: isCodeLike ? '"DM Mono", monospace' : 'inherit',
+                      color: isSelected ? '#ffffff' : '#f3f4f6',
+                      wordBreak: 'break-word',
+                      flex: 1,
                     }}
                   >
                     {opt}
@@ -316,16 +320,29 @@ export default function ExamRoom() {
           </div>
 
           {/* Question Quality Feedback Bar */}
-          <div className="question-quality-bar">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              marginBottom: '24px',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}
+          >
             <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               QUESTION QUALITY
             </span>
-            <div className="question-quality-actions">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button
                 type="button"
                 onClick={() => handleVoteQuestion(currentQ?._id, 'up')}
                 className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'up' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 title="Accurate and well-written"
               >
                 <ThumbsUp size={12} />
@@ -336,7 +353,7 @@ export default function ExamRoom() {
                 type="button"
                 onClick={() => handleVoteQuestion(currentQ?._id, 'down')}
                 className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'down' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 title="Confusing, typo, or poor wording"
               >
                 <ThumbsDown size={12} />
@@ -347,7 +364,7 @@ export default function ExamRoom() {
                 type="button"
                 onClick={() => handleOpenReport(currentQ?._id)}
                 className="btn btn-secondary btn-sm"
-                style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
                 title="Report wrong answer, broken code, or typo"
               >
                 <Flag size={12} />
@@ -356,8 +373,8 @@ export default function ExamRoom() {
             </div>
           </div>
 
-          {/* Action Bar / Mobile Sticky Dock */}
-          <div className="mobile-exam-dock">
+          {/* Action Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
             <button
               type="button"
               disabled={currentIndex === 0}
@@ -380,9 +397,9 @@ export default function ExamRoom() {
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmitQuiz}
-                className="btn btn-primary"
+                className="btn btn-primary btn-lg"
               >
-                {submitting ? 'Evaluating...' : 'Complete & Submit ↗'}
+                {submitting ? 'Evaluating...' : 'Complete & Submit Assessment ↗'}
               </button>
             )}
           </div>
