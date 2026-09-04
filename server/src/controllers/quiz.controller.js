@@ -491,4 +491,35 @@ export const reportQuestion = async (req, res) => {
   }
 };
 
+/**
+ * Delete Quiz (Author or Admin Only)
+ * Cascades deletion to remove all associated questions.
+ */
+export const deleteQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    const isOwner = quiz.teacherId && quiz.teacherId.toString() === req.user.id;
+    const isAdmin = req.user && req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Only the author or admin can delete this quiz" });
+    }
+
+    // Cascade delete all associated questions
+    await Question.deleteMany({ quizId: quiz._id });
+    await Quiz.findByIdAndDelete(quizId);
+
+    return res.status(200).json({ message: "Quiz and its questions deleted successfully", quizId });
+  } catch (error) {
+    console.error("Delete quiz error:", error);
+    return res.status(500).json({ message: "Failed to delete quiz" });
+  }
+};
+
 

@@ -58,3 +58,32 @@ export const getQuestionByQuiz = async (req, res) => {
     return res.status(500).json({ message: "can't get questions" });
   }
 };
+
+/**
+ * Delete Question (Author or Admin Only)
+ */
+export const deleteQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    const quiz = await Quiz.findById(question.quizId);
+    const isOwner = quiz && quiz.teacherId && quiz.teacherId.toString() === req.user.id;
+    const isAdmin = req.user && req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Only the quiz author or admin can delete this question" });
+    }
+
+    await Question.findByIdAndDelete(questionId);
+
+    return res.status(200).json({ message: "Question deleted successfully", questionId });
+  } catch (error) {
+    console.error("Delete question error:", error);
+    return res.status(500).json({ message: "Failed to delete question" });
+  }
+};

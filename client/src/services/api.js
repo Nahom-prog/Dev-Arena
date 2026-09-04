@@ -83,6 +83,10 @@ export const quizApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),
+  deleteQuiz: (quizId) =>
+    request(`/quizzes/${quizId}`, {
+      method: 'DELETE',
+    }),
 };
 
 export const questionApi = {
@@ -92,6 +96,10 @@ export const questionApi = {
       body: JSON.stringify(payload),
     }),
   getQuestionsByQuiz: (quizId) => request(`/questions/quiz/${quizId}`),
+  deleteQuestion: (questionId) =>
+    request(`/questions/${questionId}`, {
+      method: 'DELETE',
+    }),
 };
 
 export const leaderboardApi = {
