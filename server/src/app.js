@@ -9,7 +9,25 @@ import rateLimit from "express-rate-limit";
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, or dev tools) or allowed origins
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS policy violation: origin not allowed"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // limiter for general api requests

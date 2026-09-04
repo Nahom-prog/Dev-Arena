@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { escapeRegex } from "../utils/sanitize.js";
 
 export const getLeaderboard = async (req, res) => {
   try {
@@ -9,13 +10,13 @@ export const getLeaderboard = async (req, res) => {
       query.country = "Ethiopia";
     }
 
-    if (affiliation) {
-      query.affiliation = { $regex: affiliation, $options: "i" };
+    if (affiliation && affiliation.trim()) {
+      query.affiliation = { $regex: escapeRegex(affiliation.trim()), $options: "i" };
     }
 
     // Only show real contenders on the public leaderboard (exclude stealth admin accounts)
     const users = await User.find(query)
-      .select("name email xp level streak quizzesTaken totalScore totalQuestionsAttempted badges country affiliation")
+      .select("name xp level streak quizzesTaken totalScore totalQuestionsAttempted badges country affiliation")
       .sort({ xp: -1, totalScore: -1 })
       .limit(50);
 

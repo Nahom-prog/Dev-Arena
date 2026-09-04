@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import Quiz from "../models/Quiz.js";
 import Question from "../models/Question.js";
+import { escapeRegex } from "../utils/sanitize.js";
 
 /**
  * Platform pulse stats
@@ -45,10 +46,11 @@ export async function getAllUsers(req, res) {
     const { search } = req.query;
     const filter = {};
 
-    if (search) {
+    if (search && search.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
+        { name: { $regex: safeSearch, $options: "i" } },
+        { email: { $regex: safeSearch, $options: "i" } },
       ];
     }
 

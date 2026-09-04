@@ -2,58 +2,128 @@ import { useState } from 'react';
 import { Terminal, Play, RotateCcw, X, Lightbulb } from 'lucide-react';
 
 /**
- * Executes a string of JavaScript code safely in the browser,
- * capturing console.log, console.warn, console.error outputs and return values.
+ * Executes a string of JavaScript code safely in an isolated Web Worker.
+ * Benefits:
+ * - NO access to window, document, localStorage, sessionStorage, or auth tokens.
+ * - Watchdog timer (3000ms) terminates infinite loops (e.g. while(true)) without freezing the UI.
  */
-function executeJavaScript(codeStr) {
-  const logs = [];
-  const customConsole = {
-    log: (...args) => {
-      logs.push({
-        type: 'log',
-        text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
-      });
-    },
-    warn: (...args) => {
-      logs.push({
-        type: 'warn',
-        text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
-      });
-    },
-    error: (...args) => {
-      logs.push({
-        type: 'error',
-        text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
-      });
-    },
-  };
+function executeJavaScriptInWorker(codeStr, timeoutMs = 3000) {
+  return new Promise((resolve) => {
+    const workerScript = `
+      self.onmessage = function(e) {
+        const userCode = e.data;
+        const logs = [];
+        const customConsole = {
+          log: (...args) => {
+            logs.push({
+              type: 'log',
+              text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
+            });
+          },
+          warn: (...args) => {
+            logs.push({
+              type: 'warn',
+              text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
+            });
+          },
+          error: (...args) => {
+            logs.push({
+              type: 'error',
+              text: args.map((a) => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' '),
+            });
+          },
+        };
 
-  try {
-    // Wrap code in an IIFE passing custom console
-    const runner = new Function('console', codeStr);
-    const returnVal = runner(customConsole);
+        try {
+          const runner = new Function('console', userCode);
+          const returnVal = runner(customConsole);
 
-    if (returnVal !== undefined) {
-      logs.push({
-        type: 'return',
-        text: `➔ ${typeof returnVal === 'object' ? JSON.stringify(returnVal, null, 2) : String(returnVal)}`,
-      });
-    }
+          if (returnVal !== undefined) {
+            logs.push({
+              type: 'return',
+              text: '➔ ' + (typeof returnVal === 'object' ? JSON.stringify(returnVal, null, 2) : String(returnVal)),
+            });
+          }
 
-    if (logs.length === 0) {
-      logs.push({
-        type: 'log',
-        text: '(Code executed successfully with no console output)',
-      });
-    }
+          if (logs.length === 0) {
+            logs.push({
+              type: 'log',
+              text: '(Code executed successfully with no console output)',
+            });
+          }
 
-    return { logs, error: null };
-  } catch (err) {
-    return {
-      logs,
-      error: `${err.name}: ${err.message}`,
+          self.postMessage({ logs, error: null });
+        } catch (err) {
+          self.postMessage({
+            logs,
+            error: (err && err.name ? err.name : 'Error') + ': ' + (err && err.message ? err.message : String(err)),
+          });
+        }
+      };
+    `;
+
+    let blobUrl = null;
+    let worker = null;
+    let timer = null;
+    let settled = false;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      if (worker) {
+        worker.terminate();
+        worker = null;
+      }
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        blobUrl = null;
+      }
     };
-  }
+
+    try {
+      const blob = new Blob([workerScript], { type: 'application/javascript' });
+      blobUrl = URL.createObjectURL(blob);
+      worker = new Worker(blobUrl);
+
+      timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          resolve({
+            logs: [],
+            error: 'Execution Timed Out: Infinite loop or long running execution terminated safely.',
+          });
+        }
+      }, timeoutMs);
+
+      worker.onmessage = (e) => {
+        if (!settled) {
+          settled = true;
+          const data = e.data;
+          cleanup();
+          resolve(data);
+        }
+      };
+
+      worker.onerror = (err) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          resolve({
+            logs: [],
+            error: 'Sandbox Runtime Error: ' + (err.message || 'Worker execution failed'),
+          });
+        }
+      };
+
+      worker.postMessage(codeStr);
+    } catch (createErr) {
+      cleanup();
+      resolve({
+        logs: [],
+        error: 'Worker Initialization Error: ' + (createErr.message || 'Failed to initialize sandbox'),
+      });
+    }
+  });
 }
 
 export default function CodeSandboxModal({ initialCode = '', language = 'javascript', title = 'Interactive Code Sandbox', onClose }) {
@@ -61,12 +131,16 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
   const [outputLogs, setOutputLogs] = useState([]);
   const [runtimeError, setRuntimeError] = useState(null);
   const [hasRun, setHasRun] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
-  const handleRun = () => {
+  const handleRun = async () => {
+    if (isRunning) return;
+    setIsRunning(true);
     setHasRun(true);
-    const { logs, error } = executeJavaScript(code);
+    const { logs, error } = await executeJavaScriptInWorker(code);
     setOutputLogs(logs);
     setRuntimeError(error);
+    setIsRunning(false);
   };
 
   const handleReset = () => {
@@ -74,6 +148,7 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
     setOutputLogs([]);
     setRuntimeError(null);
     setHasRun(false);
+    setIsRunning(false);
   };
 
   return (
@@ -170,11 +245,12 @@ export default function CodeSandboxModal({ initialCode = '', language = 'javascr
               <button
                 type="button"
                 onClick={handleRun}
+                disabled={isRunning}
                 className="btn btn-primary btn-sm"
-                style={{ padding: '4px 14px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                style={{ padding: '4px 14px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '5px', opacity: isRunning ? 0.7 : 1 }}
               >
                 <Play size={12} fill="currentColor" />
-                <span>Run Code</span>
+                <span>{isRunning ? 'Executing...' : 'Run Code'}</span>
               </button>
             </div>
           </div>

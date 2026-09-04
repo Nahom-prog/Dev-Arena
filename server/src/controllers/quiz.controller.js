@@ -3,6 +3,7 @@ import Question from "../models/Question.js";
 import User from "../models/User.js";
 import { checkAndAwardBadges } from "../utils/badgeEngine.js";
 import { getLevelFromXp } from "../utils/levelEngine.js";
+import { escapeRegex } from "../utils/sanitize.js";
 
 export const createQuiz = async (req, res) => {
   try {
@@ -74,29 +75,37 @@ export const createQuiz = async (req, res) => {
 
 export const getAllQuizzes = async (req, res) => {
   try {
-    const { tag, difficulty, search } = req.query;
+    const { tag, difficulty, search, page: rawPage, limit: rawLimit } = req.query;
     const filter = { status: "published" };
 
     if (tag && tag !== "all") {
-      filter.tags = { $in: [new RegExp(`^${tag}$`, "i")] };
+      const safeTag = escapeRegex(tag.trim());
+      filter.tags = { $in: [new RegExp(`^${safeTag}$`, "i")] };
     }
 
     if (difficulty && difficulty !== "all") {
       filter.difficulty = difficulty;
     }
 
-    if (search) {
+    if (search && search.trim()) {
+      const safeSearch = escapeRegex(search.trim());
       filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { title: { $regex: safeSearch, $options: "i" } },
+        { description: { $regex: safeSearch, $options: "i" } },
       ];
     }
 
+    const page = Math.max(1, parseInt(rawPage) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 50));
+    const skip = (page - 1) * limit;
+
     const quizzes = await Quiz.find(filter)
       .populate("teacherId", "name level")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    return res.status(200).json({ quizzes });
+    return res.status(200).json({ quizzes, page, limit });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to fetch quizzes" });
@@ -369,26 +378,59 @@ export const submitQuiz = async (req, res) => {
 
 /**
  * Question Community Quality Feedback (Upvote / Downvote)
+ * Security Hardened: 1 vote per user with toggle/switch capability
  */
 export const voteQuestion = async (req, res) => {
   try {
     const { questionId } = req.params;
     const { voteType } = req.body; // 'up' or 'down'
+    const userId = req.user.id;
 
-    if (!['up', 'down'].includes(voteType)) {
+    if (!["up", "down"].includes(voteType)) {
       return res.status(400).json({ message: "Invalid voteType. Must be 'up' or 'down'." });
     }
 
-    const incField = voteType === 'up' ? { upvotes: 1 } : { downvotes: 1 };
-    const question = await Question.findByIdAndUpdate(
-      questionId,
-      { $inc: incField },
-      { new: true }
-    );
-
+    const question = await Question.findById(questionId);
     if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
+
+    question.voters = question.voters || [];
+    const existingIndex = question.voters.findIndex(
+      (v) => v.userId && v.userId.toString() === userId
+    );
+
+    if (existingIndex !== -1) {
+      const currentVote = question.voters[existingIndex].voteType;
+      if (currentVote === voteType) {
+        return res.status(200).json({
+          message: `Already registered your ${voteType}vote`,
+          upvotes: question.upvotes,
+          downvotes: question.downvotes,
+          currentVote,
+        });
+      }
+
+      // Switching vote (e.g. from down to up or vice-versa)
+      if (voteType === "up") {
+        question.upvotes = (question.upvotes || 0) + 1;
+        question.downvotes = Math.max(0, (question.downvotes || 0) - 1);
+      } else {
+        question.downvotes = (question.downvotes || 0) + 1;
+        question.upvotes = Math.max(0, (question.upvotes || 0) - 1);
+      }
+      question.voters[existingIndex].voteType = voteType;
+    } else {
+      // First time voting on this question
+      if (voteType === "up") {
+        question.upvotes = (question.upvotes || 0) + 1;
+      } else {
+        question.downvotes = (question.downvotes || 0) + 1;
+      }
+      question.voters.push({ userId, voteType });
+    }
+
+    await question.save();
 
     return res.status(200).json({
       message: `Feedback registered (${voteType})`,
@@ -403,28 +445,44 @@ export const voteQuestion = async (req, res) => {
 
 /**
  * Report Question Issue (Typo, Wrong Answer, Broken Code, Spam)
+ * Security Hardened: 1 report per user per question to prevent MongoDB document bloating
  */
 export const reportQuestion = async (req, res) => {
   try {
     const { questionId } = req.params;
     const { reason } = req.body;
+    const userId = req.user.id;
 
     const question = await Question.findById(questionId);
     if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
 
+    question.reports = question.reports || [];
+    const alreadyReported = question.reports.some(
+      (r) => r.userId && r.userId.toString() === userId
+    );
+
+    if (alreadyReported) {
+      return res.status(409).json({
+        message: "You have already submitted a report for this question.",
+        reportsCount: question.reportsCount,
+      });
+    }
+
+    const cleanReason = typeof reason === "string" ? reason.trim().slice(0, 300) : "User reported question issue";
+
     question.reportsCount = (question.reportsCount || 0) + 1;
     question.reports.push({
-      userId: req.user?.id || null,
-      reason: reason || "User reported question issue",
+      userId,
+      reason: cleanReason,
       createdAt: new Date(),
     });
 
     await question.save();
 
     return res.status(200).json({
-      message: "Report logged for God Mode moderation review",
+      message: "Report logged for moderation review",
       reportsCount: question.reportsCount,
     });
   } catch (error) {

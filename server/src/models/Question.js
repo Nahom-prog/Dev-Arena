@@ -57,6 +57,12 @@ const questionSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    voters: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        voteType: { type: String, enum: ["up", "down"] },
+      },
+    ],
   },
   { timestamps: true }
 );

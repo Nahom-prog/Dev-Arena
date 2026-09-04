@@ -14,10 +14,10 @@ export const createQuestion = async (req, res) => {
       return res.status(404).json({ message: "Quiz not found" });
     }
 
-    // Check ownership: quiz owner or admin/teacher
+    // Security Hardening: Only quiz owner or admin can add questions
     const isOwner = quiz.teacherId.toString() === req.user.id;
-    if (!isOwner && req.user.role !== "admin" && req.user.role !== "teacher") {
-      return res.status(403).json({ message: "Only the author can add questions to this quiz" });
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only the author or admin can add questions to this quiz" });
     }
 
     const newQuestion = await Question.create({
