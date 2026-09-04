@@ -1,20 +1,24 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import { quizApi } from '../services/api';
 import DailyChallengeCard from '../components/DailyChallengeCard';
 import { Swords, Zap, Trophy, Plus, Clock, ArrowRight } from 'lucide-react';
 
 const DOMAIN_TRACKS = [
   {
     id: '01',
+    quizId: 'sample-1',
     title: 'JavaScript Core Fundamentals',
     desc: 'Variables, scope, closures, array methods (map/filter/reduce), objects, and modern ES6 basics.',
-    time: '8 MINS',
+    time: '10 MINS',
     difficulty: 'Beginner',
     tag: 'JavaScript',
     badgeClass: 'badge-emerald',
   },
   {
     id: '02',
+    quizId: 'sample-2',
     title: 'React & Frontend Architecture',
     desc: 'Hooks lifecycle, component state, Virtual DOM, async effects, and modern web performance.',
     time: '12 MINS',
@@ -24,6 +28,7 @@ const DOMAIN_TRACKS = [
   },
   {
     id: '03',
+    quizId: 'sample-3',
     title: 'Node.js & Backend Internals',
     desc: 'Express middleware chains, REST API design, JWT auth flows, async event loop, and buffers.',
     time: '15 MINS',
@@ -33,9 +38,10 @@ const DOMAIN_TRACKS = [
   },
   {
     id: '04',
+    quizId: 'sample-4',
     title: 'Algorithms & System Design',
     desc: 'Data structures, sliding windows, recursion, Big-O runtime, and distributed server thinking.',
-    time: '20 MINS',
+    time: '8 MINS',
     difficulty: 'Expert',
     tag: 'Algorithms',
     badgeClass: 'badge-purple',
@@ -44,6 +50,25 @@ const DOMAIN_TRACKS = [
 
 export default function ExploreHome() {
   const { isAuthenticated, canCreateQuiz } = useAuth();
+  const [featuredQuizzes, setFeaturedQuizzes] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadFeatured = async () => {
+      try {
+        const res = await quizApi.getAllQuizzes();
+        if (mounted && res?.quizzes && res.quizzes.length > 0) {
+          setFeaturedQuizzes(res.quizzes.slice(0, 4));
+        }
+      } catch (err) {
+        console.warn('Using fallback featured challenges', err);
+      }
+    };
+    loadFeatured();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div>
@@ -143,7 +168,31 @@ export default function ExploreHome() {
           </div>
 
           <div className="grid-2">
-            {DOMAIN_TRACKS.map((t) => (
+            {(featuredQuizzes.length > 0
+              ? featuredQuizzes.map((q) => {
+                  const diff = (q.difficulty || 'mid').toLowerCase();
+                  const badgeClass =
+                    diff === 'easy'
+                      ? 'badge-emerald'
+                      : diff === 'hard'
+                      ? 'badge-amber'
+                      : diff === 'very hard'
+                      ? 'badge-rose'
+                      : 'badge-lime';
+
+                  return {
+                    id: q._id,
+                    quizId: q._id,
+                    title: q.title,
+                    desc: q.description || 'Challenge designed to evaluate core software engineering principles.',
+                    time: `${q.timeLimitMinutes || 10} MINS`,
+                    difficulty: q.difficulty || 'Mid',
+                    tag: q.tags?.[0] || 'Code',
+                    badgeClass,
+                  };
+                })
+              : DOMAIN_TRACKS
+            ).map((t) => (
               <article key={t.id} className="card card-interactive" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '220px' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -164,7 +213,7 @@ export default function ExploreHome() {
                   <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <Zap size={12} /> UP TO 2.0x XP
                   </span>
-                  <Link to="/quizzes" className="btn btn-primary btn-sm">
+                  <Link to={`/quiz/${t.quizId}`} className="btn btn-primary btn-sm">
                     Enter Challenge ↗
                   </Link>
                 </div>
