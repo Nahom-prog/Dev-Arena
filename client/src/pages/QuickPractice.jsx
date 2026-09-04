@@ -173,7 +173,7 @@ export default function QuickPractice() {
       <div className="section-label">
         <div>
           <span className="eyebrow lime">WARM-UP DRILLS</span>
-          <h2>Developer Quick Warm-Up</h2>
+          <h2>Freshen Up Your Skills with Quick Questions</h2>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <span
