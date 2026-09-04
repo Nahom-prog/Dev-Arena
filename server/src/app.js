@@ -9,41 +9,22 @@ import rateLimit from "express-rate-limit";
 
 const app = express();
 
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:5173",
-].filter(Boolean);
-
+// Dynamic CORS: Permissively allow Vercel production, preview deployments, and local dev
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, or dev tools) or allowed origins
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
-        return callback(null, true);
-      }
-      return callback(new Error("CORS policy violation: origin not allowed"));
-    },
+    origin: true,
     credentials: true,
   })
 );
 app.use(express.json());
 
-// limiter for general api requests
+// Limiter for general API requests
 const apilimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many request , please try later" }
-});
-
-// limiter for auth requests specifically for password requests
-const authlimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 15,
-  message: { message: "Too many attempts, try again later" }
+  message: { message: "Too many requests, please try again later." },
 });
 
 app.get("/", (req, res) => {
@@ -51,7 +32,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", apilimiter);
-app.use("/api/auth", authlimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/questions", questionRoutes);
