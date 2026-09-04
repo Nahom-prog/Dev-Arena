@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, Link, useParams } from 'react-router-dom';
+import { quizApi } from '../services/api';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/ToastContext';
 import FormattedQuestion from '../components/FormattedQuestion';
 import CodeSandboxModal from '../components/CodeSandboxModal';
-import { Trophy, Award, CheckCircle2, XCircle, Check, Terminal, Swords } from 'lucide-react';
+import { Trophy, Award, CheckCircle2, XCircle, Check, Terminal, Swords, ThumbsUp, ThumbsDown, Flag } from 'lucide-react';
 
 export default function DetailedResult() {
   const { quizId } = useParams();
@@ -12,6 +13,7 @@ export default function DetailedResult() {
   const { refreshUser } = useAuth();
   const { showToast, showBadgeToast, showLevelUpToast } = useToast();
   const [sandboxSnippet, setSandboxSnippet] = useState(null);
+  const [feedbackVotes, setFeedbackVotes] = useState({});
 
   const state = location.state || {};
   const result = state.result || {};
@@ -22,10 +24,33 @@ export default function DetailedResult() {
   const score = result.score ?? 0;
   const totalQuestions = result.totalQuestions ?? questions.length ?? 0;
   const percentage = result.percentage ?? (totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0);
-  const xpEarned = result.xpEarned ?? score * 50;
+  const xpEarned = result.xpEarned ?? 0;
+  const xpStatusNote = result.xpStatusNote || '';
   const newBadges = result.newBadges || result.badgesAwarded || [];
 
   const notifiedRef = useRef(false);
+
+  const handleVote = async (qId, voteType) => {
+    if (feedbackVotes[qId]) return;
+    setFeedbackVotes((prev) => ({ ...prev, [qId]: voteType }));
+    try {
+      await quizApi.voteQuestion(qId, voteType);
+      showToast({ title: 'Feedback Recorded', message: 'Registered question quality rating.', icon: '👍' });
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  const handleReport = async (qId) => {
+    const reason = window.prompt('Report question issue (Typo, Wrong Answer, Broken Code, Spam):', 'Typo or misleading wording');
+    if (!reason || !reason.trim()) return;
+    try {
+      await quizApi.reportQuestion(qId, reason.trim());
+      showToast({ title: 'Report Dispatched', message: 'Logged for review in God Mode.', icon: '🚩' });
+    } catch (err) {
+      showToast({ title: 'Report failed', message: err.message, type: 'error' });
+    }
+  };
 
   useEffect(() => {
     if (refreshUser) refreshUser();
@@ -33,10 +58,12 @@ export default function DetailedResult() {
     if (!notifiedRef.current) {
       notifiedRef.current = true;
 
-      // 1. Always fire an XP completion toast
+      // 1. Fire an XP completion toast or practice retake notice
       showToast({
-        title: 'Challenge Evaluation Complete!',
-        message: `+${xpEarned.toLocaleString()} XP earned (${score}/${totalQuestions} correct • ${percentage}%)`,
+        title: xpEarned > 0 ? 'Challenge Evaluation Complete!' : 'Practice Evaluation Complete!',
+        message: xpEarned > 0
+          ? `+${xpEarned.toLocaleString()} XP earned (${score}/${totalQuestions} correct • ${percentage}%)`
+          : (xpStatusNote || 'Practice retake (0 XP — One-time points already claimed)'),
         icon: percentage >= 80 ? '🎯' : '⚡',
         type: percentage >= 80 ? 'badge' : 'levelup',
         duration: 6000,
@@ -94,12 +121,26 @@ export default function DetailedResult() {
 
         {/* XP Reward Ribbon */}
         <div style={{ margin: '20px 0 14px' }}>
-          <span
-            className="badge badge-lime"
-            style={{ fontSize: '0.92rem', padding: '8px 20px', letterSpacing: '0.04em' }}
-          >
-            ⚡ +{xpEarned.toLocaleString()} XP EARNED
-          </span>
+          {xpEarned > 0 ? (
+            <span
+              className="badge badge-lime"
+              style={{ fontSize: '0.92rem', padding: '8px 20px', letterSpacing: '0.04em' }}
+            >
+              ⚡ +{xpEarned.toLocaleString()} XP EARNED
+            </span>
+          ) : (
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span
+                className="badge"
+                style={{ fontSize: '0.82rem', padding: '6px 16px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)' }}
+              >
+                🔄 PRACTICE RETAKE • 0 XP AWARDED
+              </span>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {xpStatusNote || 'One-time XP already earned for this assessment.'}
+              </span>
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: '8px' }}>
@@ -294,6 +335,53 @@ export default function DetailedResult() {
                       </button>
                     </div>
                   )}
+
+                  {/* Community Question Feedback Strip */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '14px',
+                      paddingTop: '10px',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                      flexWrap: 'wrap',
+                      gap: '8px',
+                    }}
+                  >
+                    <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      RATE THIS QUESTION
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(q._id, 'up')}
+                        className={`btn btn-sm ${feedbackVotes[q._id] === 'up' ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Good question"
+                      >
+                        <ThumbsUp size={11} /> Good
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(q._id, 'down')}
+                        className={`btn btn-sm ${feedbackVotes[q._id] === 'down' ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Needs improvement"
+                      >
+                        <ThumbsDown size={11} /> Needs Work
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReport(q._id)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#ef4444' }}
+                        title="Report issue"
+                      >
+                        <Flag size={11} /> Report
+                      </button>
+                    </div>
+                  </div>
                 </article>
               );
             })}

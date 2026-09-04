@@ -35,6 +35,28 @@ const questionSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    upvotes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    downvotes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    reportsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    reports: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        reason: { type: String, trim: true, default: "General issue" },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

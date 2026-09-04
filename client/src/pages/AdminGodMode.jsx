@@ -14,6 +14,10 @@ import {
   RefreshCw,
   Edit3,
   Crown,
+  Flag,
+  ThumbsUp,
+  ThumbsDown,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function AdminGodMode() {
@@ -23,7 +27,9 @@ export default function AdminGodMode() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
-  const [activeTab, setActiveTab] = useState('users');
+  const [questions, setQuestions] = useState([]);
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'quizzes' | 'questions'
+  const [questionFilter, setQuestionFilter] = useState('reported'); // 'reported' | 'all'
   const [searchUser, setSearchUser] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -37,14 +43,16 @@ export default function AdminGodMode() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes, quizzesRes] = await Promise.all([
+      const [statsRes, usersRes, quizzesRes, questionsRes] = await Promise.all([
         adminApi.getStats(),
         adminApi.getUsers(searchUser),
         adminApi.getQuizzes(),
+        adminApi.getQuestions(questionFilter),
       ]);
       setStats(statsRes.stats);
       setUsers(usersRes.users || []);
       setQuizzes(quizzesRes.quizzes || []);
+      setQuestions(questionsRes.questions || []);
     } catch (err) {
       showToast({
         title: 'Error loading God Mode telemetry',
@@ -58,7 +66,7 @@ export default function AdminGodMode() {
 
   useEffect(() => {
     loadData();
-  }, [searchUser]);
+  }, [searchUser, questionFilter]);
 
   const handleOpenEdit = (u) => {
     setEditingUser(u);
@@ -127,6 +135,27 @@ export default function AdminGodMode() {
     }
   };
 
+  const handleDismissReports = async (questionId) => {
+    try {
+      await adminApi.dismissQuestionReports(questionId);
+      showToast({ title: 'Reports Dismissed', message: 'Question verified and reports cleared.', icon: '✅' });
+      loadData();
+    } catch (err) {
+      showToast({ title: 'Action failed', message: err.message, type: 'error' });
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this question?')) return;
+    try {
+      await adminApi.deleteQuestion(questionId);
+      showToast({ title: 'Question Purged', message: 'Question was removed.', icon: '🗑️' });
+      loadData();
+    } catch (err) {
+      showToast({ title: 'Deletion failed', message: err.message, type: 'error' });
+    }
+  };
+
   return (
     <div className="god-mode-page wrap" style={{ padding: '40px 0 80px' }}>
       {/* Top Header */}
@@ -169,7 +198,7 @@ export default function AdminGodMode() {
       </div>
 
       {/* Telemetry Stats Grid */}
-      <div className="grid-4" style={{ marginBottom: '36px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '36px' }}>
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '8px' }}>
             <span className="mono" style={{ fontSize: '0.74rem' }}>REGISTERED PLAYERS</span>
@@ -182,7 +211,7 @@ export default function AdminGodMode() {
 
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '8px' }}>
-            <span className="mono" style={{ fontSize: '0.74rem' }}>PUBLISHED CHALLENGES</span>
+            <span className="mono" style={{ fontSize: '0.74rem' }}>CHALLENGES</span>
             <Swords size={16} color="#38bdf8" />
           </div>
           <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 700, color: '#38bdf8' }}>
@@ -202,6 +231,16 @@ export default function AdminGodMode() {
 
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            <span className="mono" style={{ fontSize: '0.74rem' }}>REPORTED ISSUES</span>
+            <Flag size={16} color="#ef4444" />
+          </div>
+          <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 700, color: (stats?.reportedQuestionsCount || 0) > 0 ? '#ef4444' : 'var(--text-muted)' }}>
+            {stats?.reportedQuestionsCount || 0}
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginBottom: '8px' }}>
             <span className="mono" style={{ fontSize: '0.74rem' }}>CIRCULATING XP</span>
             <Zap size={16} color="#f59e0b" />
           </div>
@@ -212,7 +251,7 @@ export default function AdminGodMode() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', flexWrap: 'wrap' }}>
         <button
           type="button"
           className={`btn btn-sm ${activeTab === 'users' ? 'btn-primary' : 'btn-secondary'}`}
@@ -231,6 +270,16 @@ export default function AdminGodMode() {
         >
           <Swords size={14} />
           <span>Challenge Moderation ({quizzes.length})</span>
+        </button>
+
+        <button
+          type="button"
+          className={`btn btn-sm ${activeTab === 'questions' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('questions')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Flag size={14} />
+          <span>Question Feedback & Reports ({stats?.reportedQuestionsCount || 0})</span>
         </button>
       </div>
 
@@ -423,6 +472,152 @@ export default function AdminGodMode() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Tab 3: Questions Quality & Community Reports */}
+      {activeTab === 'questions' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className={`btn btn-sm ${questionFilter === 'reported' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setQuestionFilter('reported')}
+              >
+                Reported / Flagged Only
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${questionFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setQuestionFilter('all')}
+              >
+                All Feedback Telemetry ({questions.length})
+              </button>
+            </div>
+            <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Sorted by report priority & community feedback
+            </span>
+          </div>
+
+          <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.02)' }}>
+                  <th style={{ padding: '14px 18px', width: '35%' }}>QUESTION CONTENT</th>
+                  <th style={{ padding: '14px 18px' }}>CHALLENGE</th>
+                  <th style={{ padding: '14px 18px' }}>UPVOTES</th>
+                  <th style={{ padding: '14px 18px' }}>DOWNVOTES</th>
+                  <th style={{ padding: '14px 18px' }}>REPORTS & REASONS</th>
+                  <th style={{ padding: '14px 18px', textAlign: 'right' }}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {questions.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      🎉 Zero questions currently flagged for review! Community quality is clean.
+                    </td>
+                  </tr>
+                ) : (
+                  questions.map((q) => (
+                    <tr key={q._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '14px 18px' }}>
+                        <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--text)' }}>
+                          {q.question}
+                        </div>
+                        {q.codeSnippet && (
+                          <pre
+                            style={{
+                              background: '#0d1117',
+                              padding: '6px 10px',
+                              borderRadius: '4px',
+                              fontSize: '0.74rem',
+                              color: '#7ee787',
+                              margin: 0,
+                              maxHeight: '70px',
+                              overflowY: 'hidden',
+                              border: '1px solid rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            {q.codeSnippet.slice(0, 100)}...
+                          </pre>
+                        )}
+                      </td>
+                      <td style={{ padding: '14px 18px' }}>
+                        <div style={{ fontWeight: 600 }}>{q.quizId?.title || 'Unknown Quiz'}</div>
+                        <span className="badge" style={{ fontSize: '0.66rem', textTransform: 'capitalize' }}>
+                          {q.quizId?.difficulty || 'General'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 18px' }}>
+                        <span className="mono" style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <ThumbsUp size={13} /> {q.upvotes || 0}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 18px' }}>
+                        <span className="mono" style={{ color: (q.downvotes || 0) > 0 ? '#ef4444' : 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <ThumbsDown size={13} /> {q.downvotes || 0}
+                        </span>
+                      </td>
+                      <td style={{ padding: '14px 18px' }}>
+                        {(q.reportsCount || 0) > 0 ? (
+                          <div>
+                            <span
+                              className="badge"
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                color: '#ef4444',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontWeight: 700,
+                                marginBottom: '4px',
+                              }}
+                            >
+                              <Flag size={11} /> {q.reportsCount} FLAGGED
+                            </span>
+                            {q.reports && q.reports.length > 0 && (
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                Latest: &ldquo;{q.reports[q.reports.length - 1]?.reason || 'User report'}&rdquo;
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Clean</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                          {(q.reportsCount || 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleDismissReports(q._id)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                              title="Clear Reports & Mark Verified"
+                            >
+                              Dismiss
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuestion(q._id)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '4px 8px', color: '#ef4444' }}
+                            title="Delete Broken/Toxic Question"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

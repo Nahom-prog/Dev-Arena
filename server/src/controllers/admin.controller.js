@@ -7,11 +7,12 @@ import Question from "../models/Question.js";
  */
 export async function getSystemStats(req, res) {
   try {
-    const [totalUsers, totalQuizzes, publishedQuizzes, totalQuestions] = await Promise.all([
+    const [totalUsers, totalQuizzes, publishedQuizzes, totalQuestions, reportedQuestionsCount] = await Promise.all([
       User.countDocuments(),
       Quiz.countDocuments(),
       Quiz.countDocuments({ status: "published" }),
       Question.countDocuments(),
+      Question.countDocuments({ reportsCount: { $gt: 0 } }),
     ]);
 
     const xpAggregate = await User.aggregate([
@@ -26,6 +27,7 @@ export async function getSystemStats(req, res) {
         totalQuizzes,
         publishedQuizzes,
         totalQuestions,
+        reportedQuestionsCount,
         totalXp,
       },
     });
@@ -198,5 +200,69 @@ export async function deleteQuizAdmin(req, res) {
   } catch (err) {
     console.error("Admin delete quiz error:", err);
     return res.status(500).json({ message: "Failed to delete quiz" });
+  }
+}
+
+/**
+ * Get questions with report metrics and voting counters for God Mode review
+ */
+export async function getQuestionsAdmin(req, res) {
+  try {
+    const { filter } = req.query; // 'reported' or 'all'
+    const query = {};
+    if (filter === 'reported') {
+      query.reportsCount = { $gt: 0 };
+    }
+
+    const questions = await Question.find(query)
+      .populate("quizId", "title difficulty status")
+      .sort({ reportsCount: -1, downvotes: -1, createdAt: -1 })
+      .limit(100);
+
+    return res.json({ questions });
+  } catch (err) {
+    console.error("Admin get questions error:", err);
+    return res.status(500).json({ message: "Failed to load questions" });
+  }
+}
+
+/**
+ * Dismiss reports on a verified question (clears reports count and log)
+ */
+export async function dismissQuestionReportsAdmin(req, res) {
+  try {
+    const { questionId } = req.params;
+    const question = await Question.findByIdAndUpdate(
+      questionId,
+      { $set: { reportsCount: 0, reports: [] } },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    return res.json({ message: "Reports dismissed and question marked verified", question });
+  } catch (err) {
+    console.error("Admin dismiss reports error:", err);
+    return res.status(500).json({ message: "Failed to dismiss reports" });
+  }
+}
+
+/**
+ * Purge a single broken or toxic question
+ */
+export async function deleteQuestionAdmin(req, res) {
+  try {
+    const { questionId } = req.params;
+    const deleted = await Question.findByIdAndDelete(questionId);
+    if (!deleted) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    return res.json({ message: "Question purged successfully" });
+  } catch (err) {
+    console.error("Admin delete question error:", err);
+    return res.status(500).json({ message: "Failed to delete question" });
   }
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { leaderboardApi } from '../services/api';
-import { Trophy, Crown, Medal, Award, Zap } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { Trophy, Crown, Medal, Award, Zap, Compass, ArrowRight, Flame, Globe } from 'lucide-react';
 
 const getDevTitle = (level, xp) => {
   if (level >= 12 || xp >= 3000) return 'Grandmaster';
@@ -11,30 +13,43 @@ const getDevTitle = (level, xp) => {
 };
 
 export default function Leaderboard() {
+  const { user: authUser, isAuthenticated } = useAuth();
   const [players, setPlayers] = useState([]);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'ethiopia'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setLoading(true);
-        const data = await leaderboardApi.getLeaderboard();
-        setPlayers(data.leaderboard || []);
-      } catch (err) {
-        console.error('Failed to load leaderboard', err);
-        setError('Unable to retrieve leaderboard standings.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchLeaderboard = async (filterType) => {
+    try {
+      setLoading(true);
+      const params = filterType === 'ethiopia' ? { filter: 'ethiopia' } : {};
+      const data = await leaderboardApi.getLeaderboard(params);
+      setPlayers(data.leaderboard || []);
+    } catch (err) {
+      console.error('Failed to load leaderboard', err);
+      setError('Unable to retrieve leaderboard standings.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchLeaderboard();
-  }, []);
+  useEffect(() => {
+    fetchLeaderboard(activeFilter);
+  }, [activeFilter]);
 
   const top1 = players[0];
   const top2 = players[1];
   const top3 = players[2];
+
+  // User position & overtake calculation
+  const myLeaderboardEntry = authUser
+    ? players.find((p) => p.id === authUser.id || p.name === authUser.name)
+    : null;
+  const myRank = myLeaderboardEntry ? myLeaderboardEntry.rank : null;
+  const rivalAbove = myRank && myRank > 1 ? players[myRank - 2] : null;
+  const xpToOvertake = rivalAbove && myLeaderboardEntry
+    ? Math.max(1, (rivalAbove.xp - myLeaderboardEntry.xp) + 1)
+    : null;
 
   return (
     <div className="leaderboard-page wrap" style={{ padding: '50px 0' }}>
@@ -43,9 +58,96 @@ export default function Leaderboard() {
           <span className="eyebrow lime" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Trophy size={14} /> HALL OF FAME
           </span>
-          <h2>Global Developer Arena Rankings</h2>
+          <h2>Arena Leaderboard Rankings</h2>
         </div>
         <span>Real-time standings ranked by verified XP points, accuracy rating, and challenges solved.</span>
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setActiveFilter('all')}
+          className={`btn btn-sm ${activeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Globe size={14} />
+          <span>Global Standings</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveFilter('ethiopia')}
+          className={`btn btn-sm ${activeFilter === 'ethiopia' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <span>🇪🇹</span>
+          <span>Ethiopian Devs Leaderboard</span>
+        </button>
+      </div>
+
+      {/* Personal Overtake HUD */}
+      <div
+        className="card"
+        style={{
+          marginBottom: '32px',
+          padding: '20px 24px',
+          background: 'linear-gradient(135deg, rgba(200, 255, 55, 0.05) 0%, rgba(13, 17, 23, 0.95) 100%)',
+          border: '1px solid rgba(200, 255, 55, 0.25)',
+        }}
+      >
+        {isAuthenticated ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span className="badge badge-lime" style={{ fontSize: '0.7rem' }}>
+                  {myRank ? `YOUR ARENA RANK #${myRank}` : 'PROVISIONAL CONTENDER'}
+                </span>
+                <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Level {authUser.level || 1} • {(authUser.xp || 0).toLocaleString()} Total XP
+                </span>
+              </div>
+
+              {myRank === 1 ? (
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--lime)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Crown size={18} color="#f59e0b" /> You are currently #1 in the Arena! Defend your throne.
+                </div>
+              ) : myRank && rivalAbove ? (
+                <div style={{ fontSize: '1rem', fontWeight: 600 }}>
+                  ⚡ You need <span style={{ color: 'var(--lime)', fontWeight: 800 }}>{xpToOvertake.toLocaleString()} XP</span> to overtake{' '}
+                  <strong>#{myRank - 1} {rivalAbove.name}</strong>!
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.95rem', color: 'var(--text)' }}>
+                  Complete challenges to claim your spot in the official Top 50 Leaderboard.
+                </div>
+              )}
+            </div>
+
+            <Link
+              to="/quizzes"
+              className="btn btn-primary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Zap size={14} />
+              <span>Conquer Next Challenge ↗</span>
+            </Link>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div>
+              <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', fontWeight: 700 }}>
+                ⚡ SIGN IN TO TRACK YOUR PROGRESS
+              </span>
+              <p style={{ margin: '4px 0 0', fontSize: '0.92rem', color: 'var(--text-muted)' }}>
+                Track your exact leaderboard position, calculate overtake XP, and unlock developer badges.
+              </p>
+            </div>
+            <Link to="/login" className="btn btn-primary btn-sm">
+              Sign In to Compete ↗
+            </Link>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -170,8 +272,16 @@ export default function Leaderboard() {
                         </span>
                       </td>
                       <td style={{ padding: '16px 20px', fontWeight: 600 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <span>{p.name}</span>
+                          {(p.country === 'Ethiopia' || !p.country) && (
+                            <span title="Ethiopian Developer" style={{ fontSize: '0.9rem' }}>🇪🇹</span>
+                          )}
+                          {p.affiliation && (
+                            <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,255,255,0.06)' }}>
+                              {p.affiliation}
+                            </span>
+                          )}
                           {p.rank === 1 && <Crown size={14} color="#f59e0b" />}
                         </div>
                       </td>

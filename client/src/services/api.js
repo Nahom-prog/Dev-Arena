@@ -68,6 +68,16 @@ export const quizApi = {
       method: 'POST',
       body: JSON.stringify({ answers }),
     }),
+  voteQuestion: (questionId, voteType) =>
+    request(`/quizzes/questions/${questionId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ voteType }),
+    }),
+  reportQuestion: (questionId, reason) =>
+    request(`/quizzes/questions/${questionId}/report`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
 };
 
 export const questionApi = {
@@ -80,7 +90,13 @@ export const questionApi = {
 };
 
 export const leaderboardApi = {
-  getLeaderboard: () => request('/leaderboard'),
+  getLeaderboard: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.filter) query.append('filter', params.filter);
+    if (params.affiliation) query.append('affiliation', params.affiliation);
+    const qs = query.toString();
+    return request(`/leaderboard${qs ? `?${qs}` : ''}`);
+  },
 };
 
 export const adminApi = {
@@ -103,6 +119,16 @@ export const adminApi = {
     }),
   deleteQuiz: (quizId) =>
     request(`/admin/quizzes/${quizId}`, {
+      method: 'DELETE',
+    }),
+  getQuestions: (filter = 'reported') =>
+    request(`/admin/questions${filter ? `?filter=${filter}` : ''}`),
+  dismissQuestionReports: (questionId) =>
+    request(`/admin/questions/${questionId}/dismiss-reports`, {
+      method: 'PATCH',
+    }),
+  deleteQuestion: (questionId) =>
+    request(`/admin/questions/${questionId}`, {
       method: 'DELETE',
     }),
 };

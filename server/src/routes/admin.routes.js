@@ -9,6 +9,9 @@ import {
   getAllQuizzesAdmin,
   toggleQuizStatus,
   deleteQuizAdmin,
+  getQuestionsAdmin,
+  dismissQuestionReportsAdmin,
+  deleteQuestionAdmin,
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -24,5 +27,9 @@ router.delete("/users/:userId", deleteUser);
 router.get("/quizzes", getAllQuizzesAdmin);
 router.patch("/quizzes/:quizId/status", toggleQuizStatus);
 router.delete("/quizzes/:quizId", deleteQuizAdmin);
+
+router.get("/questions", getQuestionsAdmin);
+router.patch("/questions/:questionId/dismiss-reports", dismissQuestionReportsAdmin);
+router.delete("/questions/:questionId", deleteQuestionAdmin);
 
 export default router;

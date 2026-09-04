@@ -266,8 +266,28 @@ export const submitQuiz = async (req, res) => {
           lastDate.getUTCDate() === now.getUTCDate();
       }
 
-      // If daily challenge was already solved today, award 0 XP for retakes
-      const finalXpEarned = (isTodayDaily && dailyAlreadyCompleted) ? 0 : xpEarned;
+      // Anti-Exploit Rules:
+      // 1. Author cannot earn XP from their own quizzes (Author Preview Mode)
+      const isAuthor = quiz.teacherId && quiz.teacherId.toString() === req.user.id.toString();
+
+      // 2. User only earns XP on the FIRST completion of any quiz (Strict Zero-XP on repeated plays)
+      const hasPreviouslyCompleted = user.recentAttempts?.some(
+        (att) => att.quizId && att.quizId.toString() === quiz._id.toString()
+      );
+
+      let finalXpEarned = xpEarned;
+      let xpStatusNote = "";
+
+      if (isAuthor) {
+        finalXpEarned = 0;
+        xpStatusNote = "Author Preview Mode — 0 XP awarded";
+      } else if (isTodayDaily && dailyAlreadyCompleted) {
+        finalXpEarned = 0;
+        xpStatusNote = "Daily Challenge already completed today — 0 XP awarded";
+      } else if (hasPreviouslyCompleted) {
+        finalXpEarned = 0;
+        xpStatusNote = "Practice Retake — 0 XP awarded (one-time completion points already claimed)";
+      }
 
       user.xp = (user.xp || 0) + finalXpEarned;
       user.level = getLevelFromXp(user.xp);
@@ -302,7 +322,7 @@ export const submitQuiz = async (req, res) => {
         date: now,
       });
 
-      // Check and award badges
+      // Check and award badges (only if real score and not already capped)
       const newBadges = checkAndAwardBadges(
         user,
         { percentage, score, totalQuestions },
@@ -321,6 +341,9 @@ export const submitQuiz = async (req, res) => {
         totalQuestions,
         percentage,
         xpEarned: finalXpEarned,
+        xpStatusNote,
+        isRepeatPlay: hasPreviouslyCompleted,
+        isAuthor,
         newTotalXp: user.xp,
         newLevel: user.level,
         streak: user.streak,
@@ -339,6 +362,72 @@ export const submitQuiz = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to submit quiz" });
+  }
+};
+
+/**
+ * Question Community Quality Feedback (Upvote / Downvote)
+ */
+export const voteQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { voteType } = req.body; // 'up' or 'down'
+
+    if (!['up', 'down'].includes(voteType)) {
+      return res.status(400).json({ message: "Invalid voteType. Must be 'up' or 'down'." });
+    }
+
+    const incField = voteType === 'up' ? { upvotes: 1 } : { downvotes: 1 };
+    const question = await Question.findByIdAndUpdate(
+      questionId,
+      { $inc: incField },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    return res.status(200).json({
+      message: `Feedback registered (${voteType})`,
+      upvotes: question.upvotes,
+      downvotes: question.downvotes,
+    });
+  } catch (error) {
+    console.error("Vote question error:", error);
+    return res.status(500).json({ message: "Failed to register feedback" });
+  }
+};
+
+/**
+ * Report Question Issue (Typo, Wrong Answer, Broken Code, Spam)
+ */
+export const reportQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { reason } = req.body;
+
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    question.reportsCount = (question.reportsCount || 0) + 1;
+    question.reports.push({
+      userId: req.user?.id || null,
+      reason: reason || "User reported question issue",
+      createdAt: new Date(),
+    });
+
+    await question.save();
+
+    return res.status(200).json({
+      message: "Report logged for God Mode moderation review",
+      reportsCount: question.reportsCount,
+    });
+  } catch (error) {
+    console.error("Report question error:", error);
+    return res.status(500).json({ message: "Failed to log report" });
   }
 };
 

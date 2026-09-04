@@ -7,6 +7,8 @@ import {
   getQuizById,
   publishQuiz,
   submitQuiz,
+  voteQuestion,
+  reportQuestion,
 } from "../controllers/quiz.controller.js";
 import { auth, optionalAuth } from "../middleware/auth.js";
 
@@ -19,6 +21,8 @@ router.get("/my/authored", auth, getMyQuizzes);
 router.get("/:quizId", optionalAuth, getQuizById);
 router.patch("/:quizId/publish", auth, publishQuiz);
 router.post("/:quizId/submit", auth, submitQuiz);
+router.post("/questions/:questionId/vote", optionalAuth, voteQuestion);
+router.post("/questions/:questionId/report", optionalAuth, reportQuestion);
 
 export default router;
 

@@ -4,6 +4,17 @@ import { quizApi, questionApi } from '../services/api';
 import CircularTimer from '../components/CircularTimer';
 import FormattedQuestion from '../components/FormattedQuestion';
 import { playCorrectSound } from '../utils/soundEffects';
+import { ThumbsUp, ThumbsDown, Flag, AlertCircle } from 'lucide-react';
+
+const shuffleArray = (arr) => {
+  if (!arr || !Array.isArray(arr)) return [];
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
 
 const FALLBACK_QUESTIONS = [
   {
@@ -46,6 +57,12 @@ export default function ExamRoom() {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Community feedback & report state
+  const [feedbackVotes, setFeedbackVotes] = useState({});
+  const [reportingQId, setReportingQId] = useState(null);
+  const [reportReason, setReportReason] = useState('');
+  const [isReporting, setIsReporting] = useState(false);
+
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
@@ -58,7 +75,13 @@ export default function ExamRoom() {
 
         setQuiz(quizRes.quiz);
         const fetched = qRes.questions || [];
-        setQuestions(fetched.length > 0 ? fetched : FALLBACK_QUESTIONS);
+        const raw = fetched.length > 0 ? fetched : FALLBACK_QUESTIONS;
+        // Deterministic per-session option shuffle prevents rote option key memorization
+        const randomized = raw.map((q) => ({
+          ...q,
+          options: shuffleArray(q.options),
+        }));
+        setQuestions(randomized);
       } catch (err) {
         setError(err.message || 'Failed to load assessment');
         setQuestions(FALLBACK_QUESTIONS);
@@ -69,6 +92,36 @@ export default function ExamRoom() {
 
     if (quizId) fetchQuizData();
   }, [quizId]);
+
+  const handleVoteQuestion = async (qId, voteType) => {
+    if (feedbackVotes[qId]) return;
+    setFeedbackVotes((prev) => ({ ...prev, [qId]: voteType }));
+    try {
+      await quizApi.voteQuestion(qId, voteType);
+    } catch {
+      // Non-blocking feedback
+    }
+  };
+
+  const handleOpenReport = (qId) => {
+    setReportingQId(qId);
+    setReportReason('Typo or misleading wording');
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportingQId || !reportReason.trim()) return;
+    try {
+      setIsReporting(true);
+      await quizApi.reportQuestion(reportingQId, reportReason.trim());
+      setReportingQId(null);
+      setReportReason('');
+      alert('Report dispatched to God Mode moderation console.');
+    } catch (err) {
+      alert(err.message || 'Failed to submit report');
+    } finally {
+      setIsReporting(false);
+    }
+  };
 
   const handleSelectOption = (qId, option) => {
     playCorrectSound();
@@ -261,6 +314,60 @@ export default function ExamRoom() {
             })}
           </div>
 
+          {/* Question Quality Feedback Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              marginBottom: '24px',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}
+          >
+            <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              QUESTION QUALITY
+            </span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => handleVoteQuestion(currentQ?._id, 'up')}
+                className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'up' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                title="Accurate and well-written"
+              >
+                <ThumbsUp size={12} />
+                <span>Good</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleVoteQuestion(currentQ?._id, 'down')}
+                className={`btn btn-sm ${feedbackVotes[currentQ?._id] === 'down' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                title="Confusing, typo, or poor wording"
+              >
+                <ThumbsDown size={12} />
+                <span>Needs Work</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenReport(currentQ?._id)}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '4px 10px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}
+                title="Report wrong answer, broken code, or typo"
+              >
+                <Flag size={12} />
+                <span>Report</span>
+              </button>
+            </div>
+          </div>
+
           {/* Action Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
             <button
@@ -352,6 +459,85 @@ export default function ExamRoom() {
           </button>
         </div>
       </div>
+
+      {/* Question Issue Report Modal */}
+      {reportingQId && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+          }}
+          onClick={() => setReportingQId(null)}
+        >
+          <div
+            className="card"
+            style={{ width: '100%', maxWidth: '440px', padding: '24px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem' }}>
+                <Flag size={16} color="#ef4444" /> Report Question Issue
+              </h3>
+              <button
+                type="button"
+                onClick={() => setReportingQId(null)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
+              Help maintain platform engineering standards. Flags are prioritized directly in the God Mode review console.
+            </p>
+
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+              REASON FOR REPORT:
+            </label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="input-field"
+              style={{ marginBottom: '14px', width: '100%' }}
+            >
+              <option value="Typo or misleading wording">Typo or misleading wording</option>
+              <option value="Objectively wrong answer marked correct">Objectively wrong answer marked correct</option>
+              <option value="Code snippet contains syntax error / won't run">Code snippet contains syntax error / won't run</option>
+              <option value="Multiple answers are technically correct">Multiple answers are technically correct</option>
+              <option value="Duplicate or spam question">Duplicate or spam question</option>
+            </select>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setReportingQId(null)}
+                className="btn btn-secondary btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isReporting}
+                onClick={handleSubmitReport}
+                className="btn btn-primary btn-sm"
+                style={{ background: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+              >
+                {isReporting ? 'Submitting...' : 'Submit Flag 🚩'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

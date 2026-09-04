@@ -6,35 +6,39 @@ import { Swords, Zap, Trophy, Plus, Clock, ArrowRight } from 'lucide-react';
 const DOMAIN_TRACKS = [
   {
     id: '01',
-    title: 'React & Frontend Architecture',
-    desc: 'Hooks concurrency, Virtual DOM fiber diffing, async server components, and state management.',
-    time: '12 MINS',
-    difficulty: 'Mid Tier',
-    tag: 'React',
+    title: 'JavaScript Core Fundamentals',
+    desc: 'Variables, scope, closures, array methods (map/filter/reduce), objects, and modern ES6 basics.',
+    time: '8 MINS',
+    difficulty: 'Beginner',
+    tag: 'JavaScript',
+    badgeClass: 'badge-emerald',
   },
   {
     id: '02',
-    title: 'Node.js & Backend Internals',
-    desc: 'Express middleware chains, JWT token flows, async event loop phases, and streaming buffers.',
-    time: '15 MINS',
-    difficulty: 'Hard Tier',
-    tag: 'Node.js',
+    title: 'React & Frontend Architecture',
+    desc: 'Hooks lifecycle, component state, Virtual DOM, async effects, and modern web performance.',
+    time: '12 MINS',
+    difficulty: 'Intermediate',
+    tag: 'React',
+    badgeClass: 'badge-lime',
   },
   {
     id: '03',
-    title: 'Algorithms & Data Structures',
-    desc: 'Tree traversals, dynamic programming, sliding windows, recursion, and Big-O runtime analysis.',
-    time: '20 MINS',
-    difficulty: 'Very Hard',
-    tag: 'Algorithms',
+    title: 'Node.js & Backend Internals',
+    desc: 'Express middleware chains, REST API design, JWT auth flows, async event loop, and buffers.',
+    time: '15 MINS',
+    difficulty: 'Advanced',
+    tag: 'Node.js',
+    badgeClass: 'badge-amber',
   },
   {
     id: '04',
-    title: 'TypeScript & Type Gymnastics',
-    desc: 'Conditional types, mapped utility types, template literal inferences, and variance checks.',
-    time: '10 MINS',
-    difficulty: 'Hard Tier',
-    tag: 'TypeScript',
+    title: 'Algorithms & System Design',
+    desc: 'Data structures, sliding windows, recursion, Big-O runtime, and distributed server thinking.',
+    time: '20 MINS',
+    difficulty: 'Expert',
+    tag: 'Algorithms',
+    badgeClass: 'badge-purple',
   },
 ];
 
@@ -46,7 +50,7 @@ export default function ExploreHome() {
       {/* Hero Section */}
       <section className="arena-hero">
         <div className="wrap">
-          {/* Active Players Live Indicator */}
+          {/* Active Season Live Indicator */}
           <div
             style={{
               display: 'inline-flex',
@@ -70,17 +74,17 @@ export default function ExploreHome() {
               }}
             ></span>
             <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--lime)', fontWeight: 700, letterSpacing: '0.04em' }}>
-              1,420+ DEVS CONTENDING LIVE
+              ⚡ SEASON 1 BATTLEGROUND OPEN • TEST YOUR DEV KNOWLEDGE
             </span>
           </div>
 
           <h1 className="arena-hero-headline">
-            Battle-tested challenges for<br />
-            <span className="serif">elite</span> software engineers.
+            Put your developer knowledge<br />
+            <span className="serif">to the test.</span>
           </h1>
 
           <p className="arena-hero-desc">
-            Sharpen your system instincts against real-world engineering scenarios. Earn verified contender XP, unlock prestigious developer badges, and compete on the global leaderboard.
+            Fast-paced coding quizzes. Real-time community rankings. For developers of all levels who want to test their skills and level up.
           </p>
 
           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
@@ -104,12 +108,31 @@ export default function ExploreHome() {
             )}
           </div>
 
+          {/* Quick Skill Tracks Strip */}
+          <div style={{ marginTop: '36px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+            <Link to="/quizzes?difficulty=easy" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #10b981' }}>
+              <span className="mono" style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700, display: 'block' }}>🟢 TIER 1</span>
+              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Beginner Dev</span>
+            </Link>
+            <Link to="/quizzes?difficulty=mid" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid var(--lime)' }}>
+              <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--lime)', fontWeight: 700, display: 'block' }}>🟡 TIER 2</span>
+              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Intermediate</span>
+            </Link>
+            <Link to="/quizzes?difficulty=hard" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #f59e0b' }}>
+              <span className="mono" style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: 700, display: 'block' }}>🟠 TIER 3</span>
+              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Advanced Dev</span>
+            </Link>
+            <Link to="/quizzes?difficulty=very%20hard" className="card card-interactive" style={{ padding: '12px 14px', textDecoration: 'none', borderLeft: '3px solid #a855f7' }}>
+              <span className="mono" style={{ fontSize: '0.68rem', color: '#a855f7', fontWeight: 700, display: 'block' }}>🔴 TIER 4</span>
+              <span style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text)' }}>Expert Architect</span>
+            </Link>
+          </div>
 
           {/* Stats Strip */}
           <div className="arena-stats-strip">
             <div className="stat-strip-item">
-              <span className="stat-strip-num">500+ XP</span>
-              <span className="stat-strip-label">Per Conquered Tier</span>
+              <span className="stat-strip-num">One-Time XP</span>
+              <span className="stat-strip-label">Earn Verified Points</span>
             </div>
             <div className="stat-strip-item">
               <span className="stat-strip-num">8 Trophies</span>
@@ -117,7 +140,7 @@ export default function ExploreHome() {
             </div>
             <div className="stat-strip-item">
               <span className="stat-strip-num">Real-Time</span>
-              <span className="stat-strip-label">Global Arena Ranking</span>
+              <span className="stat-strip-label">Global & Ethiopian Standings</span>
             </div>
           </div>
         </div>
@@ -144,9 +167,12 @@ export default function ExploreHome() {
               <article key={t.id} className="card card-interactive" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '220px' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span className="badge badge-lime">#{t.tag}</span>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <span className={`badge ${t.badgeClass || 'badge-lime'}`}>{t.difficulty}</span>
+                      <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>#{t.tag}</span>
+                    </div>
                     <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                      <Clock size={12} /> {t.time} • {t.difficulty}
+                      <Clock size={12} /> {t.time}
                     </span>
                   </div>
 
