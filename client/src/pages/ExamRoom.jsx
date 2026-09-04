@@ -160,7 +160,7 @@ export default function ExamRoom() {
         state: {
           result,
           quizTitle: quiz?.title || 'Assessment Results',
-          questions,
+          questions: (result && result.questions) ? result.questions : questions,
           userAnswers: answers,
         },
       });

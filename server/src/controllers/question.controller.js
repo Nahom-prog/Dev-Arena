@@ -38,17 +38,23 @@ export const createQuestion = async (req, res) => {
 };
  // fetching the question
 export const getQuestionByQuiz = async (req, res) => {
-    try{
-        const {quizId} = req.params;
-           
-          const quiz = await Quiz.findById(quizId);
-           if(!quiz){
-            return res.status(404).json({message:"Quiz not found"})
-           }
+  try {
+    const { quizId } = req.params;
 
-           const questions = await Question.find({quizId})
-           return res.status(200).json({questions})
-    } catch(error){
-        return res.status(500).json({message:"can't get questions"})
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
     }
-}
+
+    // Security Hardening: Anti-Cheat Mechanism
+    // Only author or admin can view answers & explanations prior to exam submission.
+    const isOwner = req.user && quiz.teacherId && quiz.teacherId.toString() === req.user.id;
+    const isAdmin = req.user && req.user.role === "admin";
+    const projection = isOwner || isAdmin ? "" : "-correctAnswer -explanation";
+
+    const questions = await Question.find({ quizId }).select(projection);
+    return res.status(200).json({ questions });
+  } catch (error) {
+    return res.status(500).json({ message: "can't get questions" });
+  }
+};

@@ -18,7 +18,8 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const assignedRole = role && ["developer", "teacher", "student", "admin"].includes(role)
+    // Security Hardening: Never allow public registration to claim admin or teacher roles.
+    const assignedRole = role && ["developer", "student"].includes(role)
       ? role
       : "developer";
 

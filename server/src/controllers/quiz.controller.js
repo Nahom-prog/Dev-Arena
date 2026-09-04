@@ -349,6 +349,7 @@ export const submitQuiz = async (req, res) => {
         streak: user.streak,
         isDaily: isTodayDaily,
         newBadges,
+        questions,
       });
     }
 
@@ -358,6 +359,7 @@ export const submitQuiz = async (req, res) => {
       totalQuestions,
       percentage,
       xpEarned,
+      questions,
     });
   } catch (error) {
     console.log(error);
