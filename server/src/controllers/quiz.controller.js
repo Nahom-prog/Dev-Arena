@@ -105,7 +105,23 @@ export const getAllQuizzes = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    return res.status(200).json({ quizzes, page, limit });
+    const quizIds = quizzes.map((q) => q._id);
+    const counts = await Question.aggregate([
+      { $match: { quizId: { $in: quizIds } } },
+      { $group: { _id: "$quizId", count: { $sum: 1 } } },
+    ]);
+    const countMap = {};
+    counts.forEach((c) => {
+      countMap[c._id.toString()] = c.count;
+    });
+
+    const quizzesWithCounts = quizzes.map((q) => {
+      const obj = q.toObject();
+      obj.questionCount = countMap[q._id.toString()] || 0;
+      return obj;
+    });
+
+    return res.status(200).json({ quizzes: quizzesWithCounts, page, limit });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to fetch quizzes" });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { quizApi } from '../services/api';
-import { Swords, Clock, Users, Zap } from 'lucide-react';
+import { Swords, Clock, Users, Zap, HelpCircle, RotateCcw, Filter } from 'lucide-react';
 
 const SAMPLE_DEV_QUIZZES = [
   {
@@ -13,6 +13,7 @@ const SAMPLE_DEV_QUIZZES = [
     difficulty: 'mid',
     creatorName: 'Nahom (Lead Architect)',
     playsCount: 42,
+    questionCount: 20,
     status: 'published',
   },
   {
@@ -24,6 +25,7 @@ const SAMPLE_DEV_QUIZZES = [
     difficulty: 'hard',
     creatorName: 'Sarah Lin',
     playsCount: 28,
+    questionCount: 20,
     status: 'published',
   },
   {
@@ -35,6 +37,7 @@ const SAMPLE_DEV_QUIZZES = [
     difficulty: 'very hard',
     creatorName: 'Alex R.',
     playsCount: 19,
+    questionCount: 20,
     status: 'published',
   },
   {
@@ -46,6 +49,7 @@ const SAMPLE_DEV_QUIZZES = [
     difficulty: 'easy',
     creatorName: 'Dev Arena Bot',
     playsCount: 76,
+    questionCount: 20,
     status: 'published',
   },
 ];
@@ -74,7 +78,7 @@ export default function QuizzesList() {
           search: searchTerm,
         });
         const serverQuizzes = res.quizzes || [];
-        setQuizzes(serverQuizzes.length > 0 ? serverQuizzes : SAMPLE_DEV_QUIZZES);
+        setQuizzes(serverQuizzes);
       } catch (err) {
         console.warn('Using fallback catalog', err);
         setQuizzes(SAMPLE_DEV_QUIZZES);
@@ -103,6 +107,12 @@ export default function QuizzesList() {
   ];
   const difficultyList = ['all', 'easy', 'mid', 'hard', 'very hard'];
 
+  const resetAllFilters = () => {
+    setActiveTag('all');
+    setActiveDifficulty('all');
+    setSearchTerm('');
+  };
+
   return (
     <div className="quizzes-page wrap" style={{ padding: '50px 0' }}>
       <div className="section-label">
@@ -116,7 +126,7 @@ export default function QuizzesList() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '36px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ flex: 1, minWidth: '280px' }}>
             <input
@@ -167,6 +177,34 @@ export default function QuizzesList() {
         </div>
       </div>
 
+      {/* Active Filter Bar & Results Count */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+            FILTER:
+          </span>
+          <span className="badge" style={{ fontSize: '0.72rem', background: 'rgba(255,255,255,0.06)', color: 'var(--text)' }}>
+            Stack: <strong style={{ color: 'var(--lime)' }}>{activeTag === 'all' ? 'All Stacks' : activeTag}</strong>
+          </span>
+          <span className="badge" style={{ fontSize: '0.72rem', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', textTransform: 'capitalize' }}>
+            Tier: <strong style={{ color: 'var(--lime)' }}>{activeDifficulty === 'all' ? 'All Tiers' : activeDifficulty}</strong>
+          </span>
+          {(activeTag !== 'all' || activeDifficulty !== 'all' || searchTerm.trim()) && (
+            <button
+              type="button"
+              className="btn btn-sm btn-secondary"
+              style={{ fontSize: '0.72rem', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              onClick={resetAllFilters}
+            >
+              <RotateCcw size={11} /> Reset Filters
+            </button>
+          )}
+        </div>
+        <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+          {loading ? 'Searching arena...' : `Showing ${quizzes.length} Challenge${quizzes.length === 1 ? '' : 's'}`}
+        </span>
+      </div>
+
       {/* Quiz Cards Grid */}
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
@@ -175,15 +213,26 @@ export default function QuizzesList() {
           </span>
         </div>
       ) : quizzes.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '60px 0' }}>
-          <h3>No matching challenges found</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Try broadening your filter criteria or search query.</p>
+        <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <Filter size={32} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
+          <h3 style={{ marginBottom: '8px' }}>No matching challenges found</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '20px' }}>
+            No challenges match the selected filter (Stack: <strong>{activeTag}</strong>, Tier: <strong>{activeDifficulty}</strong>).
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={resetAllFilters}
+          >
+            Reset All Filters
+          </button>
         </div>
       ) : (
         <div className="grid-2">
           {quizzes.map((quiz) => {
             const diffInfo = DIFFICULTY_MAP[quiz.difficulty] || DIFFICULTY_MAP.easy;
             const tags = quiz.tags && quiz.tags.length > 0 ? quiz.tags : ['JavaScript'];
+            const qCount = quiz.questionCount ?? 20;
 
             return (
               <article
@@ -193,9 +242,24 @@ export default function QuizzesList() {
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={`badge ${diffInfo.badgeClass}`} style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
                         {diffInfo.label}
+                      </span>
+                      <span
+                        className="badge"
+                        style={{
+                          fontSize: '0.68rem',
+                          padding: '3px 8px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: 'rgba(200,255,55,0.1)',
+                          color: 'var(--lime)',
+                          border: '1px solid rgba(200,255,55,0.25)',
+                        }}
+                      >
+                        <HelpCircle size={11} /> {qCount} Questions
                       </span>
                       <span className="badge" style={{ fontSize: '0.68rem', background: 'rgba(255,255,255,0.06)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={11} /> {quiz.timeLimitMinutes || 10}m
@@ -226,7 +290,7 @@ export default function QuizzesList() {
                   </span>
                   <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <Swords size={14} />
-                    <span>Enter Arena</span>
+                    <span>Enter Arena ({qCount} Qs)</span>
                   </Link>
                 </div>
               </article>
