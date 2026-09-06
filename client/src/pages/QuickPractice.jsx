@@ -282,15 +282,33 @@ export default function QuickPractice() {
 
               {currentQ.codeSnippet && (
                 <div style={{ marginTop: '12px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowSandbox(true)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <Terminal size={14} />
-                    <span>Run & Experiment in Sandbox</span>
-                  </button>
+                  {['javascript', 'js', 'typescript', 'ts'].includes((currentQ.language || '').toLowerCase()) ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowSandbox(true)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.74rem', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Terminal size={14} />
+                      <span>Run & Experiment in Sandbox</span>
+                    </button>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.74rem',
+                        color: 'var(--text-muted)',
+                        padding: '4px 10px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      <span>💡 {currentQ.language ? currentQ.language.toUpperCase() : 'Code'} Syntax & Concept Verified</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

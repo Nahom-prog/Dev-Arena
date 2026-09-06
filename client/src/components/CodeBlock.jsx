@@ -144,6 +144,7 @@ export default function CodeBlock({ code, language = 'javascript', title = null 
 
       {/* Code Content with Line Numbers */}
       <div
+        className="code-block-body"
         style={{
           display: 'flex',
           padding: '14px 0',

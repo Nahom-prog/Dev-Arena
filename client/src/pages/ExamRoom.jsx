@@ -320,24 +320,11 @@ export default function ExamRoom() {
           </div>
 
           {/* Question Quality Feedback Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 14px',
-              background: 'rgba(255, 255, 255, 0.02)',
-              borderRadius: '6px',
-              border: '1px solid var(--border)',
-              marginBottom: '24px',
-              flexWrap: 'wrap',
-              gap: '8px',
-            }}
-          >
+          <div className="question-quality-bar">
             <span className="mono" style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
               QUESTION QUALITY
             </span>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div className="question-quality-actions">
               <button
                 type="button"
                 onClick={() => handleVoteQuestion(currentQ?._id, 'up')}
@@ -374,7 +361,7 @@ export default function ExamRoom() {
           </div>
 
           {/* Action Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+          <div className="exam-action-bar">
             <button
               type="button"
               disabled={currentIndex === 0}

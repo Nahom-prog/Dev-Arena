@@ -86,7 +86,21 @@ export default function QuizzesList() {
     fetchQuizzes();
   }, [activeTag, activeDifficulty, searchTerm]);
 
-  const tagsList = ['all', 'JavaScript', 'React', 'TypeScript', 'Node.js', 'Algorithms', 'Frontend'];
+  const tagsList = [
+    'all',
+    'TypeScript',
+    'JavaScript',
+    'React',
+    'Next.js',
+    'Node.js',
+    'PostgreSQL',
+    'Python',
+    'Docker',
+    'HTML & CSS',
+    'MongoDB',
+    'Java',
+    'Git',
+  ];
   const difficultyList = ['all', 'easy', 'mid', 'hard', 'very hard'];
 
   return (
