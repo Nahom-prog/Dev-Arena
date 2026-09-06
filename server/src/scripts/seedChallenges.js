@@ -11,7 +11,11 @@ const RETIRED_LEGACY_TITLES = [
   "JavaScript Core & Web Essentials",
   "React 19 & Component Architecture",
   "Node.js & Backend Architecture",
+  "JavaScript - Practical Fundamentals",
   "JavaScript - Real-World Gotchas & Patterns",
+  "JavaScript - Deep Mechanics & Internals",
+  "JavaScript - Advanced Mastery & Gymnastics",
+  "advanced react concurrency",
   "sdfsd",
 ];
 
