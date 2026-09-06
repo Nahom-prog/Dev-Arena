@@ -11,6 +11,8 @@ const RETIRED_LEGACY_TITLES = [
   "JavaScript Core & Web Essentials",
   "React 19 & Component Architecture",
   "Node.js & Backend Architecture",
+  "JavaScript - Real-World Gotchas & Patterns",
+  "sdfsd",
 ];
 
 async function seed() {
