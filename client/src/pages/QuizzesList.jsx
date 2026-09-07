@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { quizApi } from '../services/api';
-import { Swords, Clock, Users, Zap, HelpCircle, RotateCcw, Filter } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { Swords, Clock, Users, Zap, HelpCircle, RotateCcw, Filter, CheckCircle2 } from 'lucide-react';
 
 const SAMPLE_DEV_QUIZZES = [
   {
@@ -23,20 +24,20 @@ const SAMPLE_DEV_QUIZZES = [
     timeLimitMinutes: 12,
     tags: ['React', 'Frontend'],
     difficulty: 'hard',
-    creatorName: 'Sarah Lin',
-    playsCount: 28,
+    creatorName: 'Dev Arena Bot',
+    playsCount: 119,
     questionCount: 20,
     status: 'published',
   },
   {
     _id: 'sample-3',
-    title: 'TypeScript Type Gymnastics & Generics',
-    description: 'Conditional types, mapped utility types, template literal inferences, and covariance/contravariance.',
+    title: 'TypeScript Generics & Conditional Types',
+    description: 'Infer keyword, template literal types, mapped types, and branded primitive validation.',
     timeLimitMinutes: 15,
     tags: ['TypeScript'],
     difficulty: 'very hard',
-    creatorName: 'Alex R.',
-    playsCount: 19,
+    creatorName: 'Dev Arena Bot',
+    playsCount: 94,
     questionCount: 20,
     status: 'published',
   },
@@ -61,9 +62,10 @@ const DIFFICULTY_MAP = {
   'very hard': { label: 'VERY HARD (2.0x XP)', badgeClass: 'badge-rose' },
 };
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default function QuizzesList() {
+  const { user } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTag, setActiveTag] = useState('all');
@@ -271,11 +273,24 @@ export default function QuizzesList() {
             const tags = quiz.tags && quiz.tags.length > 0 ? quiz.tags : ['JavaScript'];
             const qCount = quiz.questionCount ?? 20;
 
+            const userAttempt =
+              quiz.userAttempt ||
+              user?.recentAttempts?.find(
+                (att) => att.quizId && (att.quizId === quiz._id || att.quizId.toString() === quiz._id?.toString())
+              );
+            const isCompleted = !!(quiz.isCompleted || userAttempt);
+
             return (
               <article
                 key={quiz._id}
-                className="card card-interactive"
-                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '230px' }}
+                className={`card card-interactive ${isCompleted ? 'quiz-card-completed' : ''}`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '230px',
+                  borderLeft: isCompleted ? '3px solid #10b981' : undefined,
+                }}
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
@@ -283,6 +298,26 @@ export default function QuizzesList() {
                       <span className={`badge ${diffInfo.badgeClass}`} style={{ fontSize: '0.68rem', padding: '3px 8px' }}>
                         {diffInfo.label}
                       </span>
+                      {isCompleted && (
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: '0.68rem',
+                            padding: '3px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            color: '#10b981',
+                            border: '1px solid rgba(16, 185, 129, 0.35)',
+                            fontWeight: 600,
+                          }}
+                          title="You have completed this challenge previously (0 XP on retake)"
+                        >
+                          <CheckCircle2 size={11} />
+                          <span>COMPLETED {userAttempt?.bestPercentage !== undefined ? `(${userAttempt.bestPercentage}%)` : '✓'}</span>
+                        </span>
+                      )}
                       <span
                         className="badge"
                         style={{
@@ -321,14 +356,29 @@ export default function QuizzesList() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                  <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                    Author: <span style={{ color: 'var(--text)' }}>{quiz.creatorName || quiz.teacherId?.name || 'Dev Contributor'}</span>
-                  </span>
-                  <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <Swords size={14} />
-                    <span>Enter Arena ({qCount} Qs)</span>
-                  </Link>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                      Author: <span style={{ color: 'var(--text)' }}>{quiz.creatorName || quiz.teacherId?.name || 'Dev Contributor'}</span>
+                    </span>
+                    {isCompleted && (
+                      <span className="mono" style={{ fontSize: '0.7rem', color: '#10b981', marginTop: '2px' }}>
+                        ✓ Previously Completed (0 XP retake)
+                      </span>
+                    )}
+                  </div>
+
+                  {isCompleted ? (
+                    <Link to={`/quiz/${quiz._id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <RotateCcw size={13} />
+                      <span>Retake Arena ({qCount} Qs)</span>
+                    </Link>
+                  ) : (
+                    <Link to={`/quiz/${quiz._id}`} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Swords size={14} />
+                      <span>Enter Arena ({qCount} Qs)</span>
+                    </Link>
+                  )}
                 </div>
               </article>
             );
@@ -391,7 +441,7 @@ export default function QuizzesList() {
                 style={{ minWidth: '150px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <RotateCcw size={14} className={loadingMore ? 'spin' : ''} />
-                <span>{loadingMore ? 'Loading...' : 'Load More (+8)'}</span>
+                <span>{loadingMore ? 'Loading...' : 'Load More (+10)'}</span>
               </button>
             ) : (
               <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--lime)', padding: '6px 12px' }}>

@@ -96,7 +96,7 @@ export const getAllQuizzes = async (req, res) => {
     }
 
     const page = Math.max(1, parseInt(rawPage) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 8));
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 10));
     const skip = (page - 1) * limit;
 
     const isAllTagsNoSearch = (!tag || tag === "all") && (!search || !search.trim());
@@ -165,10 +165,37 @@ export const getAllQuizzes = async (req, res) => {
       countMap[c._id.toString()] = c.count;
     });
 
+    // Determine completion history for the active user if authenticated
+    let userAttemptMap = {};
+    if (req.user?.id) {
+      const user = await User.findById(req.user.id).select("recentAttempts").lean();
+      if (user?.recentAttempts) {
+        user.recentAttempts.forEach((att) => {
+          if (att.quizId) {
+            const qIdStr = att.quizId.toString();
+            const existing = userAttemptMap[qIdStr];
+            if (!existing || (att.percentage || 0) > (existing.bestPercentage || 0)) {
+              userAttemptMap[qIdStr] = {
+                completed: true,
+                bestScore: att.score ?? 0,
+                bestPercentage: att.percentage ?? 0,
+                totalQuestions: att.totalQuestions ?? 0,
+                lastAttemptDate: att.date,
+              };
+            }
+          }
+        });
+      }
+    }
+
     const quizzesWithCounts = quizzes.map((q) => {
+      const qIdStr = q._id.toString();
+      const attemptInfo = userAttemptMap[qIdStr] || null;
       return {
         ...q,
-        questionCount: countMap[q._id.toString()] || 0,
+        questionCount: countMap[qIdStr] || 0,
+        isCompleted: !!attemptInfo?.completed,
+        userAttempt: attemptInfo,
       };
     });
 

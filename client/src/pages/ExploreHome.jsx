@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { quizApi } from '../services/api';
 import DailyChallengeCard from '../components/DailyChallengeCard';
-import { Swords, Zap, Trophy, Plus, Clock, ArrowRight } from 'lucide-react';
+import { Swords, Zap, Trophy, Plus, Clock, ArrowRight, CheckCircle2, RotateCcw } from 'lucide-react';
 
 const DOMAIN_TRACKS = [
   {
@@ -49,14 +49,14 @@ const DOMAIN_TRACKS = [
 ];
 
 export default function ExploreHome() {
-  const { isAuthenticated, canCreateQuiz } = useAuth();
+  const { user, isAuthenticated, canCreateQuiz } = useAuth();
   const [featuredQuizzes, setFeaturedQuizzes] = useState([]);
 
   useEffect(() => {
     let mounted = true;
     const loadFeatured = async () => {
       try {
-        const res = await quizApi.getAllQuizzes();
+        const res = await quizApi.getAllQuizzes({ limit: 4 });
         if (mounted && res?.quizzes && res.quizzes.length > 0) {
           setFeaturedQuizzes(res.quizzes.slice(0, 4));
         }
@@ -180,6 +180,13 @@ export default function ExploreHome() {
                       ? 'badge-rose'
                       : 'badge-lime';
 
+                  const userAttempt =
+                    q.userAttempt ||
+                    user?.recentAttempts?.find(
+                      (att) => att.quizId && (att.quizId === q._id || att.quizId.toString() === q._id?.toString())
+                    );
+                  const isCompleted = !!(q.isCompleted || userAttempt);
+
                   return {
                     id: q._id,
                     quizId: q._id,
@@ -189,15 +196,46 @@ export default function ExploreHome() {
                     difficulty: q.difficulty || 'Mid',
                     tag: q.tags?.[0] || 'Code',
                     badgeClass,
+                    isCompleted,
+                    userAttempt,
                   };
                 })
               : DOMAIN_TRACKS
             ).map((t) => (
-              <article key={t.id} className="card card-interactive" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '220px' }}>
+              <article
+                key={t.id}
+                className={`card card-interactive ${t.isCompleted ? 'quiz-card-completed' : ''}`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '220px',
+                  borderLeft: t.isCompleted ? '3px solid #10b981' : undefined,
+                }}
+              >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={`badge ${t.badgeClass || 'badge-lime'}`}>{t.difficulty}</span>
+                      {t.isCompleted && (
+                        <span
+                          className="badge"
+                          style={{
+                            fontSize: '0.68rem',
+                            padding: '3px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            color: '#10b981',
+                            border: '1px solid rgba(16, 185, 129, 0.35)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <CheckCircle2 size={11} />
+                          <span>COMPLETED {t.userAttempt?.bestPercentage !== undefined ? `(${t.userAttempt.bestPercentage}%)` : '✓'}</span>
+                        </span>
+                      )}
                       <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>#{t.tag}</span>
                     </div>
                     <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
@@ -209,13 +247,27 @@ export default function ExploreHome() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.5' }}>{t.desc}</p>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
-                  <span className="mono" style={{ fontSize: '0.78rem', color: 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <Zap size={12} /> UP TO 2.0x XP
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '14px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '8px' }}>
+                  <span className="mono" style={{ fontSize: '0.78rem', color: t.isCompleted ? '#10b981' : 'var(--lime)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {t.isCompleted ? (
+                      <span>✓ Completed (0 XP retake)</span>
+                    ) : (
+                      <>
+                        <Zap size={12} /> UP TO 2.0x XP
+                      </>
+                    )}
                   </span>
-                  <Link to={`/quiz/${t.quizId}`} className="btn btn-primary btn-sm">
-                    Enter Challenge ↗
-                  </Link>
+
+                  {t.isCompleted ? (
+                    <Link to={`/quiz/${t.quizId}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <RotateCcw size={13} />
+                      <span>Retake ↺</span>
+                    </Link>
+                  ) : (
+                    <Link to={`/quiz/${t.quizId}`} className="btn btn-primary btn-sm">
+                      Enter Challenge ↗
+                    </Link>
+                  )}
                 </div>
               </article>
             ))}

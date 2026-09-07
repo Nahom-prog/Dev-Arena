@@ -213,6 +213,16 @@ a {
   background: var(--card-hover);
 }
 
+.quiz-card-completed {
+  border-left: 3px solid #10b981 !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(13, 19, 15, 0.95) 100%) !important;
+}
+
+.quiz-card-completed:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  border-left-color: #10b981 !important;
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
