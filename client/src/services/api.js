@@ -59,6 +59,8 @@ export const quizApi = {
     if (params.tag && params.tag !== 'all') query.append('tag', params.tag);
     if (params.difficulty && params.difficulty !== 'all') query.append('difficulty', params.difficulty);
     if (params.search) query.append('search', params.search);
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
     const qs = query.toString();
     return request(`/quizzes${qs ? `?${qs}` : ''}`);
   },

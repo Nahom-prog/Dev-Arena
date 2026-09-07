@@ -96,14 +96,64 @@ export const getAllQuizzes = async (req, res) => {
     }
 
     const page = Math.max(1, parseInt(rawPage) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 50));
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 16));
     const skip = (page - 1) * limit;
 
-    const quizzes = await Quiz.find(filter)
-      .populate("teacherId", "name level")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const isAllTagsNoSearch = (!tag || tag === "all") && (!search || !search.trim());
+
+    let quizzes = [];
+    let total = 0;
+
+    if (isAllTagsNoSearch) {
+      // Interleave technologies so the initial view is diverse across stacks rather than monolithic
+      const allMatching = await Quiz.find(filter)
+        .populate("teacherId", "name level")
+        .lean();
+
+      total = allMatching.length;
+
+      // Group by primary language tag
+      const CORE_STACKS = ["JavaScript", "TypeScript", "React", "Node.js", "Python", "HTML & CSS"];
+      const groups = {};
+      CORE_STACKS.forEach((s) => (groups[s] = []));
+      const others = [];
+
+      allMatching.forEach((q) => {
+        const matchingStack = CORE_STACKS.find((s) =>
+          q.tags?.some((t) => t.toLowerCase() === s.toLowerCase())
+        );
+        if (matchingStack) {
+          groups[matchingStack].push(q);
+        } else {
+          others.push(q);
+        }
+      });
+
+      // Interleave items round-robin across stacks
+      const interleaved = [];
+      let maxLen = Math.max(...Object.values(groups).map((g) => g.length), others.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        for (const stack of CORE_STACKS) {
+          if (groups[stack][i]) {
+            interleaved.push(groups[stack][i]);
+          }
+        }
+        if (others[i]) {
+          interleaved.push(others[i]);
+        }
+      }
+
+      quizzes = interleaved.slice(skip, skip + limit);
+    } else {
+      total = await Quiz.countDocuments(filter);
+      quizzes = await Quiz.find(filter)
+        .populate("teacherId", "name level")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    }
 
     const quizIds = quizzes.map((q) => q._id);
     const counts = await Question.aggregate([
@@ -116,12 +166,21 @@ export const getAllQuizzes = async (req, res) => {
     });
 
     const quizzesWithCounts = quizzes.map((q) => {
-      const obj = q.toObject();
-      obj.questionCount = countMap[q._id.toString()] || 0;
-      return obj;
+      return {
+        ...q,
+        questionCount: countMap[q._id.toString()] || 0,
+      };
     });
 
-    return res.status(200).json({ quizzes: quizzesWithCounts, page, limit });
+    const hasMore = skip + quizzesWithCounts.length < total;
+
+    return res.status(200).json({
+      quizzes: quizzesWithCounts,
+      page,
+      limit,
+      total,
+      hasMore,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to fetch quizzes" });

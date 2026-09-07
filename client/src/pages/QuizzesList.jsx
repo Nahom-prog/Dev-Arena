@@ -67,28 +67,64 @@ export default function QuizzesList() {
   const [activeTag, setActiveTag] = useState('all');
   const [activeDifficulty, setActiveDifficulty] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalQuizzes, setTotalQuizzes] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadBatchSize, setLoadBatchSize] = useState(16);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
         setLoading(true);
+        setPage(1);
         const res = await quizApi.getAllQuizzes({
           tag: activeTag,
           difficulty: activeDifficulty,
           search: searchTerm,
+          page: 1,
+          limit: loadBatchSize,
         });
         const serverQuizzes = res.quizzes || [];
         setQuizzes(serverQuizzes);
+        setTotalQuizzes(res.total || serverQuizzes.length);
+        setHasMore(res.hasMore ?? (serverQuizzes.length < (res.total || 0)));
       } catch (err) {
         console.warn('Using fallback catalog', err);
         setQuizzes(SAMPLE_DEV_QUIZZES);
+        setTotalQuizzes(SAMPLE_DEV_QUIZZES.length);
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuizzes();
-  }, [activeTag, activeDifficulty, searchTerm]);
+  }, [activeTag, activeDifficulty, searchTerm, loadBatchSize]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const res = await quizApi.getAllQuizzes({
+        tag: activeTag,
+        difficulty: activeDifficulty,
+        search: searchTerm,
+        page: nextPage,
+        limit: loadBatchSize,
+      });
+      const newQuizzes = res.quizzes || [];
+      setQuizzes((prev) => [...prev, ...newQuizzes]);
+      setPage(nextPage);
+      if (typeof res.total === 'number') setTotalQuizzes(res.total);
+      setHasMore(res.hasMore ?? (quizzes.length + newQuizzes.length < (res.total || 0)));
+    } catch (err) {
+      console.error('Failed to load more challenges:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const tagsList = [
     'all',
@@ -296,6 +332,98 @@ export default function QuizzesList() {
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* Load More & Pagination Bar */}
+      {!loading && quizzes.length > 0 && (
+        <div
+          className="card"
+          style={{
+            marginTop: '36px',
+            padding: '20px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            background: 'rgba(8, 13, 10, 0.85)',
+            border: '1px solid var(--border)',
+          }}
+        >
+          <div>
+            <span className="mono" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Showing <strong style={{ color: 'var(--lime)' }}>{quizzes.length}</strong> of{' '}
+              <strong style={{ color: '#fff' }}>{totalQuizzes || quizzes.length}</strong> challenges
+              {totalQuizzes > quizzes.length && (
+                <span> ({totalQuizzes - quizzes.length} remaining)</span>
+              )}
+            </span>
+            <div
+              style={{
+                width: '180px',
+                height: '4px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '2px',
+                marginTop: '8px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${Math.min(100, Math.round((quizzes.length / (totalQuizzes || quizzes.length || 1)) * 100))}%`,
+                  background: 'var(--lime)',
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                Batch:
+              </span>
+              <select
+                value={loadBatchSize}
+                onChange={(e) => setLoadBatchSize(Number(e.target.value))}
+                style={{
+                  background: '#151f19',
+                  color: '#fff',
+                  border: '1px solid var(--border)',
+                  borderRadius: '4px',
+                  padding: '6px 10px',
+                  fontSize: '0.82rem',
+                  fontFamily: '"DM Mono", monospace',
+                  cursor: 'pointer',
+                }}
+                aria-label="Select batch size"
+              >
+                <option value={12}>12 at a time</option>
+                <option value={16}>16 at a time</option>
+                <option value={24}>24 at a time</option>
+                <option value={36}>36 at a time</option>
+              </select>
+            </div>
+
+            {hasMore ? (
+              <button
+                type="button"
+                disabled={loadingMore}
+                onClick={handleLoadMore}
+                className="btn btn-primary"
+                style={{ minWidth: '150px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <RotateCcw size={14} className={loadingMore ? 'spin' : ''} />
+                <span>{loadingMore ? 'Loading...' : `Load More (+${loadBatchSize})`}</span>
+              </button>
+            ) : (
+              <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--lime)', padding: '6px 12px' }}>
+                ✓ All {totalQuizzes} challenges loaded
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>

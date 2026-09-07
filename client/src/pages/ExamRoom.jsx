@@ -129,11 +129,64 @@ export default function ExamRoom() {
     setAnswers((prev) => ({ ...prev, [qId]: option }));
   };
 
+  // Leave confirmation warning state
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false);
+  const [pendingNavPath, setPendingNavPath] = useState(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleConfirmLeave = () => {
+    setShowLeaveWarning(false);
+    setIsLeaving(true);
+    const target = pendingNavPath || '/quizzes';
+    setPendingNavPath(null);
+    navigate(target);
+  };
+
+  useEffect(() => {
+    if (!started || submitting || isLeaving) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handleDocumentClick = (e) => {
+      const anchor = e.target.closest('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingNavPath(href);
+      setShowLeaveWarning(true);
+    };
+
+    // Protect browser back button navigation
+    window.history.pushState({ inExam: true }, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState({ inExam: true }, '', window.location.href);
+      setPendingNavPath('/quizzes');
+      setShowLeaveWarning(true);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('click', handleDocumentClick, true);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('click', handleDocumentClick, true);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [started, submitting, isLeaving]);
+
   const handleSubmitQuiz = useCallback(async () => {
     if (submitting) return;
 
     try {
       setSubmitting(true);
+      setIsLeaving(true);
       setError(null);
 
       const formattedAnswers = Object.entries(answers).map(([questionId, selectedAnswer]) => ({
@@ -167,6 +220,7 @@ export default function ExamRoom() {
     } catch (err) {
       setError(err.message || 'Submission error');
       setSubmitting(false);
+      setIsLeaving(false);
     }
   }, [submitting, answers, quizId, questions, quiz?.title, navigate]);
 
@@ -280,6 +334,42 @@ export default function ExamRoom() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Quick Mobile Navigation Bar directly under pills */}
+          <div className="mobile-map-nav-bar">
+            <button
+              type="button"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex((prev) => prev - 1)}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+            >
+              ← Prev
+            </button>
+            <span className="mono" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Q {currentIndex + 1} of {totalQ}
+            </span>
+            {currentIndex < totalQ - 1 ? (
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => prev + 1)}
+                className="btn btn-primary btn-sm"
+                style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleSubmitQuiz}
+                className="btn btn-primary btn-sm"
+                style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+              >
+                Finish ↗
+              </button>
+            )}
           </div>
 
           <FormattedQuestion
@@ -428,6 +518,39 @@ export default function ExamRoom() {
             })}
           </div>
 
+          {/* Quick Nav Controls directly below Question Map */}
+          <div className="exam-map-nav-controls">
+            <button
+              type="button"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex((prev) => prev - 1)}
+              className="btn btn-secondary btn-sm"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              ← Previous
+            </button>
+            {currentIndex < totalQ - 1 ? (
+              <button
+                type="button"
+                onClick={() => setCurrentIndex((prev) => prev + 1)}
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleSubmitQuiz}
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Finish ↗
+              </button>
+            )}
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--lime)' }}></span> Current Active
@@ -570,6 +693,87 @@ export default function ExamRoom() {
             >
               Continue Challenge
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Exam Warning Modal */}
+      {showLeaveWarning && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10001,
+            padding: '20px',
+          }}
+          onClick={() => setShowLeaveWarning(false)}
+        >
+          <div
+            className="card"
+            style={{
+              width: '100%',
+              maxWidth: '440px',
+              padding: '28px',
+              textAlign: 'center',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(239, 68, 68, 0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+              }}
+            >
+              <AlertCircle size={30} color="#ef4444" />
+            </div>
+
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', letterSpacing: '-0.02em', color: '#fff' }}>
+              Abandon Active Assessment?
+            </h3>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: '1.55', margin: '0 0 24px' }}>
+              You are currently in an active exam chamber session. If you leave now, your recorded answers for this challenge will be discarded and the countdown cannot be paused or resumed.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLeaveWarning(false);
+                  setPendingNavPath(null);
+                }}
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Stay in Exam
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLeave}
+                className="btn btn-secondary"
+                style={{ width: '100%', justifyContent: 'center', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+              >
+                Abandon & Leave
+              </button>
+            </div>
           </div>
         </div>
       )}
