@@ -67,18 +67,7 @@ export default function DailyChallengeCard() {
   const isCompleted = dailyData.completedToday;
 
   return (
-    <div
-      className="card daily-challenge-card"
-      style={{
-        marginBottom: '48px',
-        padding: '36px',
-        background: 'radial-gradient(circle at top right, rgba(200, 255, 55, 0.12), #0b110d 75%)',
-        border: '1px solid rgba(200, 255, 55, 0.45)',
-        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="card daily-challenge-card">
       {/* Background Accent glow */}
       <div
         style={{
@@ -94,14 +83,15 @@ export default function DailyChallengeCard() {
         }}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+      <div className="daily-challenge-grid">
+        {/* Left Info Column */}
+        <div className="daily-challenge-content">
+          <div className="daily-challenge-badges">
             <span
               className="badge badge-lime"
-              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ padding: '5px 12px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              <Flame size={15} color="#080b09" />
+              <Flame size={14} color="#080b09" />
               DAILY ARENA CHALLENGE
             </span>
             <span
@@ -110,7 +100,7 @@ export default function DailyChallengeCard() {
                 background: 'rgba(245, 158, 11, 0.15)',
                 color: '#f59e0b',
                 border: '1px solid rgba(245, 158, 11, 0.4)',
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
@@ -119,18 +109,22 @@ export default function DailyChallengeCard() {
               <Zap size={13} color="#f59e0b" />
               2.0x DOUBLE XP
             </span>
+            <span className="daily-challenge-streak-pill">
+              <Flame size={13} color="#fbbf24" />
+              {streak} DAY STREAK
+            </span>
           </div>
 
-          <h2 style={{ fontSize: '2.1rem', margin: '6px 0 8px', letterSpacing: '-0.02em' }}>
+          <h2 className="daily-challenge-title">
             {quiz.title}
           </h2>
 
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.94rem', maxWidth: '620px', margin: '0 0 18px', lineHeight: '1.55' }}>
+          <p className="daily-challenge-desc">
             {quiz.description || 'Solve today’s community battle challenge to keep your streak flame alive and claim double XP points.'}
           </p>
 
           {/* Metadata chips */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="daily-challenge-meta">
             <span className="badge" style={{ textTransform: 'capitalize' }}>
               Tier: {quiz.difficulty || 'mid'}
             </span>
@@ -145,69 +139,31 @@ export default function DailyChallengeCard() {
           </div>
         </div>
 
-        {/* Right Action Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '16px', minWidth: '220px' }}>
-          {/* Countdown timer */}
-          <div style={{ textAlign: 'right' }}>
-            <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>
-              RESETS IN:
+        {/* Right HUD Action Box */}
+        <div className="daily-challenge-hud">
+          <div className="daily-challenge-timer-row">
+            <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Challenge Resets In:
             </span>
-            <span
-              className="mono"
-              style={{
-                fontSize: '1.15rem',
-                color: 'var(--lime)',
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-                background: 'rgba(0, 0, 0, 0.35)',
-                padding: '4px 12px',
-                borderRadius: '4px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <Timer size={16} />
-              {timeLeft || 'Calculating...'}
-            </span>
+            <div className="daily-challenge-timer-val">
+              <Timer size={15} />
+              <span>{timeLeft || 'Calculating...'}</span>
+            </div>
           </div>
 
-          {/* Current streak badge */}
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              padding: '6px 14px',
-              borderRadius: '100px',
-              fontSize: '0.8rem',
-              color: '#fbbf24',
-              fontFamily: 'DM Mono',
-              fontWeight: 700,
-            }}
-          >
-            <Flame size={14} color="#fbbf24" />
-            {streak} DAY STREAK ACTIVE
-          </div>
-
-          {/* Launch Button */}
           <Link
             to={`/quiz/${quiz._id}`}
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            className="btn btn-primary btn-lg daily-challenge-btn"
           >
             {isCompleted ? (
               <>
                 <RotateCcw size={16} />
-                <span>Re-battle Daily (Active ✓)</span>
+                <span>Re-battle Daily ✓</span>
               </>
             ) : (
               <>
                 <Swords size={18} />
-                <span>Enter Daily Challenge (2.0x XP)</span>
+                <span>Enter Daily Challenge ↗</span>
               </>
             )}
           </Link>

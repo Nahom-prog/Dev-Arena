@@ -61,6 +61,8 @@ const DIFFICULTY_MAP = {
   'very hard': { label: 'VERY HARD (2.0x XP)', badgeClass: 'badge-rose' },
 };
 
+const PAGE_SIZE = 8;
+
 export default function QuizzesList() {
   const [quizzes, setQuizzes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,7 +73,6 @@ export default function QuizzesList() {
   const [page, setPage] = useState(1);
   const [totalQuizzes, setTotalQuizzes] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [loadBatchSize, setLoadBatchSize] = useState(16);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -83,7 +84,7 @@ export default function QuizzesList() {
           difficulty: activeDifficulty,
           search: searchTerm,
           page: 1,
-          limit: loadBatchSize,
+          limit: PAGE_SIZE,
         });
         const serverQuizzes = res.quizzes || [];
         setQuizzes(serverQuizzes);
@@ -100,7 +101,7 @@ export default function QuizzesList() {
     };
 
     fetchQuizzes();
-  }, [activeTag, activeDifficulty, searchTerm, loadBatchSize]);
+  }, [activeTag, activeDifficulty, searchTerm]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -112,7 +113,7 @@ export default function QuizzesList() {
         difficulty: activeDifficulty,
         search: searchTerm,
         page: nextPage,
-        limit: loadBatchSize,
+        limit: PAGE_SIZE,
       });
       const newQuizzes = res.quizzes || [];
       setQuizzes((prev) => [...prev, ...newQuizzes]);
@@ -380,33 +381,7 @@ export default function QuizzesList() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="mono" style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                Batch:
-              </span>
-              <select
-                value={loadBatchSize}
-                onChange={(e) => setLoadBatchSize(Number(e.target.value))}
-                style={{
-                  background: '#151f19',
-                  color: '#fff',
-                  border: '1px solid var(--border)',
-                  borderRadius: '4px',
-                  padding: '6px 10px',
-                  fontSize: '0.82rem',
-                  fontFamily: '"DM Mono", monospace',
-                  cursor: 'pointer',
-                }}
-                aria-label="Select batch size"
-              >
-                <option value={12}>12 at a time</option>
-                <option value={16}>16 at a time</option>
-                <option value={24}>24 at a time</option>
-                <option value={36}>36 at a time</option>
-              </select>
-            </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {hasMore ? (
               <button
                 type="button"
@@ -416,7 +391,7 @@ export default function QuizzesList() {
                 style={{ minWidth: '150px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <RotateCcw size={14} className={loadingMore ? 'spin' : ''} />
-                <span>{loadingMore ? 'Loading...' : `Load More (+${loadBatchSize})`}</span>
+                <span>{loadingMore ? 'Loading...' : 'Load More (+8)'}</span>
               </button>
             ) : (
               <span className="mono" style={{ fontSize: '0.8rem', color: 'var(--lime)', padding: '6px 12px' }}>

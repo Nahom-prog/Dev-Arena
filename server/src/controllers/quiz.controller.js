@@ -96,7 +96,7 @@ export const getAllQuizzes = async (req, res) => {
     }
 
     const page = Math.max(1, parseInt(rawPage) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 16));
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 8));
     const skip = (page - 1) * limit;
 
     const isAllTagsNoSearch = (!tag || tag === "all") && (!search || !search.trim());
