@@ -15,6 +15,11 @@ const RETIRED_LEGACY_TITLES = [
   "JavaScript - Real-World Gotchas & Patterns",
   "JavaScript - Deep Mechanics & Internals",
   "JavaScript - Advanced Mastery & Gymnastics",
+  "TypeScript - Practical Fundamentals",
+  "TypeScript - Real-World Gotchas & Patterns",
+  "TypeScript - Deep Mechanics & Internals",
+  "TypeScript - Advanced Mastery & Gymnastics",
+  "TypeScript Generics & Systems Mastery",
   "advanced react concurrency",
   "sdfsd",
 ];
