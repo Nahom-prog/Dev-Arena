@@ -30,6 +30,8 @@ const RETIRED_LEGACY_TITLES = [
   "TypeScript Generics & Systems Mastery",
   "advanced react concurrency",
   "sdfsd",
+  "Python & Modern Development",
+  "HTML5, CSS & Modern Layouts",
 ];
 
 async function seed() {
