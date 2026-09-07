@@ -233,7 +233,7 @@ export default function ExploreHome() {
                           }}
                         >
                           <CheckCircle2 size={11} />
-                          <span>COMPLETED {t.userAttempt?.bestPercentage !== undefined ? `(${t.userAttempt.bestPercentage}%)` : '✓'}</span>
+                          <span>COMPLETED ✓</span>
                         </span>
                       )}
                       <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>#{t.tag}</span>

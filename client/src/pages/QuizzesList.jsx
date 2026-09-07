@@ -315,7 +315,7 @@ export default function QuizzesList() {
                           title="You have completed this challenge previously (0 XP on retake)"
                         >
                           <CheckCircle2 size={11} />
-                          <span>COMPLETED {userAttempt?.bestPercentage !== undefined ? `(${userAttempt.bestPercentage}%)` : '✓'}</span>
+                          <span>COMPLETED ✓</span>
                         </span>
                       )}
                       <span
