@@ -470,7 +470,7 @@ export const javascriptVeryHardQuizzes = [
     "difficulty": "very hard",
     "tags": [
       "JavaScript",
-      "Node.js",
+      "Runtime",
       "Performance"
     ],
     "timeLimitMinutes": 8,

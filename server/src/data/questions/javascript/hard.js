@@ -5,7 +5,7 @@ export const javascriptHardQuizzes = [
     "difficulty": "hard",
     "tags": [
       "JavaScript",
-      "Node.js",
+      "Runtime",
       "Performance"
     ],
     "timeLimitMinutes": 7,
@@ -84,7 +84,7 @@ export const javascriptHardQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 7,
     "questions": [
@@ -315,7 +315,7 @@ export const javascriptHardQuizzes = [
     "difficulty": "hard",
     "tags": [
       "JavaScript",
-      "Node.js",
+      "Runtime",
       "Frontend"
     ],
     "timeLimitMinutes": 7,
@@ -471,7 +471,7 @@ export const javascriptHardQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 7,
     "questions": [
@@ -1089,7 +1089,7 @@ export const javascriptHardQuizzes = [
     "difficulty": "hard",
     "tags": [
       "JavaScript",
-      "Node.js",
+      "Runtime",
       "Backend"
     ],
     "timeLimitMinutes": 7,
@@ -1167,7 +1167,7 @@ export const javascriptHardQuizzes = [
     "difficulty": "hard",
     "tags": [
       "JavaScript",
-      "Node.js",
+      "Runtime",
       "Backend"
     ],
     "timeLimitMinutes": 7,

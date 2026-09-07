@@ -19,6 +19,14 @@ const RETIRED_LEGACY_TITLES = [
   "TypeScript - Real-World Gotchas & Patterns",
   "TypeScript - Deep Mechanics & Internals",
   "TypeScript - Advanced Mastery & Gymnastics",
+  "React - Practical Fundamentals",
+  "React - Real-World Gotchas & Patterns",
+  "React - Deep Mechanics & Internals",
+  "React - Advanced Mastery & Gymnastics",
+  "Node.js - Practical Fundamentals",
+  "Node.js - Real-World Gotchas & Patterns",
+  "Node.js - Deep Mechanics & Internals",
+  "Node.js - Advanced Mastery & Gymnastics",
   "TypeScript Generics & Systems Mastery",
   "advanced react concurrency",
   "sdfsd",
@@ -91,14 +99,12 @@ async function seed() {
       // 4. Clean existing questions for this challenge and re-seed
       await Question.deleteMany({ quizId: quiz._id });
 
-      for (const q of ch.questions) {
-        // Ensure options include the correct answer and is valid
+      const questionDocs = ch.questions.map(q => {
         let options = [...q.options];
         if (!options.includes(q.correctAnswer)) {
           options[0] = q.correctAnswer;
         }
-
-        await Question.create({
+        return {
           quizId: quiz._id,
           question: q.question,
           codeSnippet: q.codeSnippet || "",
@@ -106,9 +112,10 @@ async function seed() {
           options: options,
           correctAnswer: q.correctAnswer,
           explanation: q.explanation || "",
-        });
-        totalQuestionsSeeded++;
-      }
+        };
+      });
+      await Question.insertMany(questionDocs);
+      totalQuestionsSeeded += questionDocs.length;
       console.log(`   ➔ Seeded ${ch.questions.length} questions for "${ch.title}"`);
     }
 

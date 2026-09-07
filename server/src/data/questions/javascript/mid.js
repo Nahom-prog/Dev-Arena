@@ -160,7 +160,7 @@ export const javascriptMidQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 6,
     "questions": [
@@ -315,7 +315,7 @@ export const javascriptMidQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 6,
     "questions": [
@@ -393,7 +393,7 @@ export const javascriptMidQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 6,
     "questions": [
@@ -1010,7 +1010,7 @@ export const javascriptMidQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 6,
     "questions": [
@@ -1242,7 +1242,7 @@ export const javascriptMidQuizzes = [
     "tags": [
       "JavaScript",
       "Frontend",
-      "Node.js"
+      "Runtime"
     ],
     "timeLimitMinutes": 6,
     "questions": [
