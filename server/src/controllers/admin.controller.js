@@ -129,8 +129,19 @@ export async function deleteUser(req, res) {
       });
     }
 
-    if (req.user._id.toString() === userId) {
+    const currentAdminId = (req.user?.id || req.user?._id || "").toString();
+    if (currentAdminId === userId) {
       return res.status(400).json({ message: "Cannot delete your own account." });
+    }
+
+    // Cascade: remove quizzes and questions authored by this user
+    const userQuizzes = await Quiz.find({ teacherId: userId }).select("_id");
+    if (userQuizzes.length > 0) {
+      const quizIds = userQuizzes.map((q) => q._id);
+      await Promise.all([
+        Quiz.deleteMany({ teacherId: userId }),
+        Question.deleteMany({ quizId: { $in: quizIds } }),
+      ]);
     }
 
     await User.findByIdAndDelete(userId);
