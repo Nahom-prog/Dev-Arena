@@ -19,6 +19,7 @@ import {
   Award,
   Globe,
   Check,
+  ShieldAlert,
 } from 'lucide-react';
 
 const ALL_DEV_BADGES = [
@@ -146,6 +147,48 @@ export default function Profile() {
         </div>
         <span>Track your XP trajectory, accuracy rating, and verified developer badges.</span>
       </div>
+
+      {/* Disciplinary Strike Banner if present */}
+      {user.systemWarnings && user.systemWarnings.length > 0 && (
+        <div
+          className="card"
+          style={{
+            marginBottom: '24px',
+            border: '1.5px solid #ef4444',
+            background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(0, 0, 0, 0.5) 100%)',
+            padding: '20px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              background: 'rgba(239, 68, 68, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ef4444',
+              flexShrink: 0,
+            }}
+          >
+            <ShieldAlert size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                GOVERNANCE DIRECTIVE ON RECORD ({user.systemWarnings.length} {user.systemWarnings.length === 1 ? 'STRIKE' : 'STRIKES'})
+              </span>
+            </div>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#fca5a5', lineHeight: 1.5 }}>
+              {user.systemWarnings[user.systemWarnings.length - 1].message}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Profile Header Card */}
       <div className="card" style={{ marginBottom: '32px' }}>

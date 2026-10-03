@@ -1,4 +1,4 @@
-# ⚔️ Dev Arena (Quiz Master) — Next-Gen Evaluation & Assessment Platform
+# ⚡ Dev Arena — Developer Skill Benchmarking Platform
 
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -6,40 +6,29 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose%209-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A high-performance full-stack evaluation engine and competitive assessment arena. Built with role-based authorization for educators and students, real-time timed test sessions, instant automated grading, sound effects, level progression, and competitive global leaderboards.
+> **"Put your developer knowledge to the test."**  
+> Fast-paced coding quizzes, real-time community rankings, and skill benchmarking for developers leveling up their craft.
 
 ---
 
 ## 🌟 Key Features
 
-### 🎓 For Educators & Creators (Teacher Studio)
-- **Interactive Quiz Builder:** Create, configure, publish, and draft custom quizzes with granular time limits and category tags.
-- **Dynamic Question Manager:** Add multiple-choice questions, custom options, answer keys, and point weightings.
-- **Live Class Performance Analytics:** Monitor student submissions, question breakdown statistics, and pass/fail distributions.
-
-### ⚔️ For Students & Developers (Quiz Arena)
-- **Timed Assessment Runner:** Clean, distraction-free examination interface with countdown timers and warning triggers.
-- **Gamified Level Engine & XP:** Earn experience points, unlock achievement badges, and level up your developer rank.
-- **Global & Daily Leaderboards:** Compete in daily challenges with real-time scoring, streaks, and ranking tiers.
-- **Immediate Granular Feedback:** Instant breakdown of answers, correct explanations, and overall performance metrics.
-- **Audio Feedback & Micro-Interactions:** Immersive sound effects and tactile feedback powered by the Web Audio API.
+- **Domain Tracks:** Curated challenges spanning JavaScript fundamentals, React & frontend architecture, Node.js internals, Python, HTML & CSS, algorithms, and system design.
+- **Timed Assessment Runner:** Clean, distraction-free examination interface with countdown timers, warning alerts, and instant answer locking.
+- **Quick Warm-Up:** Rapid zero-friction practice sessions for quick syntax and logic drills.
+- **Dynamic Leaderboard:** Real-time global community rankings, win streaks, and score tracking.
+- **Granular Diagnostics:** Instant answer explanations, time-per-question metrics, and category accuracy breakdowns.
+- **Developer Profiles:** Track completed challenges, mastery distribution, and verified badges.
+- **Audio Feedback:** Synthesized micro-interactions and chimes built natively with the browser Web Audio API.
+- **Admin God Mode & Telemetry:** Stealth security administration, player forensic dossiers, solve-velocity anti-cheat surveillance, and authoritarian governance directives.
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- **Framework:** [React 19](https://react.dev/)
-- **Build Tool:** [Vite 8](https://vitejs.dev/)
-- **Icons:** [Lucide React](https://lucide.dev/)
-- **Routing:** [React Router 7](https://reactrouter.com/)
-- **Analytics:** Vercel Analytics ready
-
-### Backend
-- **Runtime:** [Node.js](https://nodejs.org/)
-- **Framework:** [Express 5](https://expressjs.com/)
-- **Database:** [MongoDB](https://www.mongodb.com/) via [Mongoose 9](https://mongoosejs.com/)
-- **Security & Performance:** `bcryptjs`, JWT (`jsonwebtoken`), `cors`, and `express-rate-limit`
+- **Frontend:** React 19, Vite 8, React Router 7, Lucide Icons, Custom CSS Design System
+- **Backend:** Node.js, Express 5, MongoDB, Mongoose 9
+- **Security:** JWT authentication, bcryptjs, rate limiting, and CORS
 
 ---
 
@@ -49,25 +38,22 @@ A high-performance full-stack evaluation engine and competitive assessment arena
 Quiz-project/
 ├── client/                     # Frontend Vite + React application
 │   ├── src/
-│   │   ├── components/         # Navbar, DailyChallengeCard, Footer, UI elements
-│   │   ├── context/            # AuthContext & state providers
-│   │   ├── pages/              # Arena, Teacher Studio, Dashboard, Leaderboards
-│   │   ├── utils/              # Sound effects, level engine, API client helpers
-│   │   ├── App.jsx             # Main router and layout
-│   │   └── index.css           # Design tokens, typography & dark theme
+│   │   ├── components/         # Reusable UI components (Navbar, WarningModal, etc.)
+│   │   ├── context/            # Global state (Auth, Toast)
+│   │   ├── pages/              # Arena pages (Home, Quizzes, Practice, Leaderboard, Profile, Admin)
+│   │   ├── utils/              # Client helpers, level calculations, audio synth
+│   │   └── index.css           # Global stylesheets & design tokens
 │   ├── package.json
 │   └── vite.config.js
 │
-├── server/                     # Backend API & evaluation services
+├── server/                     # Express REST API
 │   ├── src/
-│   │   ├── models/             # User, Quiz, Question, and Submission schemas
-│   │   ├── routes/             # Auth, Quiz, and Result API endpoints
-│   │   └── scripts/            # Seed data and challenge generators
-│   ├── server.js               # Express application entry point
-│   ├── package.json
-│   └── .env.example
+│   │   ├── models/             # Database schemas (User, Quiz, Question)
+│   │   ├── routes/             # API endpoints (Auth, Quiz, Admin)
+│   │   └── scripts/            # Challenge seed scripts
+│   ├── server.js               # Server entry point
+│   └── package.json
 │
-├── package.json                # Monorepo scripts (client/server shortcuts)
 └── README.md
 ```
 
@@ -76,48 +62,38 @@ Quiz-project/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [MongoDB](https://www.mongodb.com/) (local instance or MongoDB Atlas cluster)
+- Node.js (v18+)
+- MongoDB (local or Atlas)
 
 ---
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/Nahom-prog/Quiz-app.git
-cd Quiz-app
+git clone https://github.com/Nahom-prog/Dev-Arena.git
+cd Dev-Arena
 ```
 
-### 2. Configure Environment Variables
-Inside `server/`, create a `.env` file:
+### 2. Configure Environment (`server/.env`)
 ```env
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/quiz-master
-JWT_SECRET=your_super_secret_jwt_key
+MONGO_URI=mongodb://localhost:27017/dev-arena
+JWT_SECRET=your_jwt_secret
 CLIENT_URL=http://localhost:5173
 ```
 
 ### 3. Install Dependencies
-Install dependencies from the root directory or in both `client` and `server`:
 ```bash
-# Install root & seed tooling
 npm install
-
-# Install client dependencies
 npm install --prefix client
-
-# Install server dependencies
 npm install --prefix server
 ```
 
-### 4. Seed Daily Challenges (Optional)
-Populate initial challenge questions and categories:
+### 4. Seed Challenges (Optional)
 ```bash
 npm run seed
 ```
 
-### 5. Start Development Servers
-Run both backend and frontend concurrently:
-
+### 5. Start the Application
 ```bash
 # Terminal 1 - Backend Server
 npm run server
@@ -126,31 +102,8 @@ npm run server
 npm run dev
 ```
 
-- **Frontend Client:** `http://localhost:5173`
-- **Backend API:** `http://localhost:5000`
-
----
-
-## 🔒 Roles & Permissions
-
-| Feature | Student / Candidate | Educator / Admin |
-| :--- | :---: | :---: |
-| Browse & Search Quizzes | ✅ | ✅ |
-| Take Timed Assessments | ✅ | ✅ |
-| Earn XP & Climb Leaderboard | ✅ | ✅ |
-| Create & Edit Quizzes | ❌ | ✅ |
-| Manage Question Bank | ❌ | ✅ |
-| View Class Analytics & Submissions | ❌ | ✅ |
-
----
-
-## 🤝 Contributing
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- Client: `http://localhost:5173`
+- Server: `http://localhost:5000`
 
 ---
 
@@ -161,5 +114,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ---
 
 <p align="center">
-  Crafted with care by <a href="https://github.com/Nahom-prog">Nahom</a> ⚡
+  Crafted by <a href="https://github.com/Nahom-prog">Nahom</a> ⚡
 </p>

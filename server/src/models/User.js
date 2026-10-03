@@ -24,6 +24,21 @@ const recentAttemptSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const systemWarningSchema = new mongoose.Schema(
+  {
+    message: { type: String, required: true, trim: true },
+    severity: {
+      type: String,
+      enum: ["warning", "strike", "final_warning"],
+      default: "warning",
+    },
+    issuedBy: { type: String, default: "Platform Governance" },
+    acknowledged: { type: Boolean, default: false },
+    acknowledgedAt: { type: Date, default: null },
+  },
+  { timestamps: true }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -36,7 +51,7 @@ const userSchema = new mongoose.Schema(
     },
     xp: { type: Number, default: 0, min: 0 },
     level: { type: Number, default: 1, min: 1 },
-    streak: { type: Number, default: 1, min: 0 },
+    streak: { type: Number, default: 0, min: 0 },
     quizzesTaken: { type: Number, default: 0, min: 0 },
     quizzesCreated: { type: Number, default: 0, min: 0 },
     totalScore: { type: Number, default: 0, min: 0 },
@@ -46,6 +61,7 @@ const userSchema = new mongoose.Schema(
     affiliation: { type: String, default: "", trim: true },
     badges: { type: [badgeSchema], default: [] },
     recentAttempts: { type: [recentAttemptSchema], default: [] },
+    systemWarnings: { type: [systemWarningSchema], default: [] },
   },
   { timestamps: true }
 );

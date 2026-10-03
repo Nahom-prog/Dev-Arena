@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Quiz from "../models/Quiz.js";
 import Question from "../models/Question.js";
 import { escapeRegex } from "../utils/sanitize.js";
+import { getLevelFromXp } from "../utils/levelEngine.js";
 
 /**
  * Platform pulse stats
@@ -149,6 +150,182 @@ export async function deleteUser(req, res) {
   } catch (err) {
     console.error("Admin delete user error:", err);
     return res.status(500).json({ message: "Failed to delete user" });
+  }
+}
+
+/**
+ * Deep player forensic dossier & telemetry audit
+ */
+export async function getUserDossier(req, res) {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select("-passwordHash");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const attempts = user.recentAttempts || [];
+    const totalAttempts = attempts.length;
+    const totalQuestionsAttempted = user.totalQuestionsAttempted || 0;
+    const totalScore = user.totalScore || 0;
+
+    // Calculate time metrics and intervals between attempts
+    let fastestGapSeconds = null;
+    let totalGapSeconds = 0;
+    let countedGaps = 0;
+    const enrichedAttempts = [];
+
+    for (let i = 0; i < attempts.length; i++) {
+      const a = attempts[i];
+      let gapSeconds = null;
+      if (i > 0 && attempts[i - 1].date && a.date) {
+        const diff = Math.round(
+          (new Date(a.date).getTime() - new Date(attempts[i - 1].date).getTime()) / 1000
+        );
+        if (diff >= 0 && diff < 86400) {
+          gapSeconds = diff;
+          totalGapSeconds += diff;
+          countedGaps++;
+          if (fastestGapSeconds === null || diff < fastestGapSeconds) {
+            fastestGapSeconds = diff;
+          }
+        }
+      }
+      enrichedAttempts.push({
+        quizId: a.quizId,
+        quizTitle: a.quizTitle,
+        score: a.score,
+        totalQuestions: a.totalQuestions,
+        percentage: a.percentage,
+        xpEarned: a.xpEarned,
+        date: a.date,
+        gapSeconds,
+      });
+    }
+
+    const avgGapSeconds = countedGaps > 0 ? Math.round(totalGapSeconds / countedGaps) : null;
+    const avgSecondsPerQuestion =
+      avgGapSeconds && avgGapSeconds > 0 ? Math.round(avgGapSeconds / 5) : null;
+
+    // Telemetry flags: If solving questions faster than 20 seconds each on average with high volume
+    const isSuspiciousSpeed =
+      avgSecondsPerQuestion !== null && avgSecondsPerQuestion < 20 && totalAttempts >= 5;
+    const accuracy =
+      totalQuestionsAttempted > 0
+        ? ((totalScore / totalQuestionsAttempted) * 100).toFixed(1) + "%"
+        : "0%";
+
+    return res.json({
+      dossier: {
+        user,
+        telemetry: {
+          totalAttempts,
+          totalQuestionsAttempted,
+          totalScore,
+          accuracy,
+          avgGapSeconds,
+          avgSecondsPerQuestion,
+          fastestGapSeconds,
+          isSuspiciousSpeed,
+        },
+        attempts: enrichedAttempts.reverse(),
+        warnings: user.systemWarnings || [],
+      },
+    });
+  } catch (err) {
+    console.error("Admin user dossier error:", err);
+    return res.status(500).json({ message: "Failed to load user dossier" });
+  }
+}
+
+/**
+ * Issue authoritarian system warning / strike
+ */
+export async function issueUserWarning(req, res) {
+  try {
+    const { userId } = req.params;
+    const { message, severity = "warning" } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: "Warning message cannot be empty" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Founder Immunity Shield
+    if (user.email === FOUNDER_EMAIL) {
+      return res.status(403).json({ message: "Immunity Shield: Founder cannot be issued warnings." });
+    }
+
+    const newWarning = {
+      message: message.trim(),
+      severity: ["warning", "strike", "final_warning"].includes(severity) ? severity : "warning",
+      issuedBy: req.user.email || "Platform Supreme Governance",
+      acknowledged: false,
+      acknowledgedAt: null,
+    };
+
+    if (!user.systemWarnings) user.systemWarnings = [];
+    user.systemWarnings.push(newWarning);
+
+    await user.save();
+
+    return res.json({
+      message: `Official ${newWarning.severity.toUpperCase()} dispatched to ${user.name}`,
+      warning: newWarning,
+      warnings: user.systemWarnings,
+    });
+  } catch (err) {
+    console.error("Admin issue warning error:", err);
+    return res.status(500).json({ message: "Failed to issue warning" });
+  }
+}
+
+/**
+ * Clear/pardon user disciplinary warnings
+ */
+export async function clearUserWarnings(req, res) {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.systemWarnings = [];
+    await user.save();
+
+    return res.json({ message: `Disciplinary record cleared for ${user.name}`, warnings: [] });
+  } catch (err) {
+    console.error("Admin clear warnings error:", err);
+    return res.status(500).json({ message: "Failed to clear warnings" });
+  }
+}
+
+/**
+ * Reset or penalize user XP & recalculate rank
+ */
+export async function resetUserXp(req, res) {
+  try {
+    const { userId } = req.params;
+    const { newXp = 0 } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.email === FOUNDER_EMAIL && req.user.email !== FOUNDER_EMAIL) {
+      return res.status(403).json({ message: "Immunity Shield: Founder stats cannot be reset." });
+    }
+
+    user.xp = Math.max(0, Number(newXp) || 0);
+    user.level = getLevelFromXp(user.xp);
+
+    await user.save();
+    return res.json({ message: `XP and level successfully recalibrated for ${user.name}`, user });
+  } catch (err) {
+    console.error("Admin reset XP error:", err);
+    return res.status(500).json({ message: "Failed to reset XP" });
   }
 }
 

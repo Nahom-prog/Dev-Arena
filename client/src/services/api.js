@@ -46,6 +46,10 @@ export const authApi = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  acknowledgeWarning: () =>
+    request('/auth/acknowledge-warning', {
+      method: 'POST',
+    }),
 };
 
 export const quizApi = {
@@ -126,6 +130,21 @@ export const adminApi = {
   deleteUser: (userId) =>
     request(`/admin/users/${userId}`, {
       method: 'DELETE',
+    }),
+  getUserDossier: (userId) => request(`/admin/users/${userId}/dossier`),
+  issueWarning: (userId, payload) =>
+    request(`/admin/users/${userId}/warn`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  clearWarnings: (userId) =>
+    request(`/admin/users/${userId}/clear-warnings`, {
+      method: 'POST',
+    }),
+  resetUserXp: (userId, payload = {}) =>
+    request(`/admin/users/${userId}/reset-xp`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     }),
   getQuizzes: () => request('/admin/quizzes'),
   toggleQuizStatus: (quizId, status) =>
