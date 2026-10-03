@@ -152,6 +152,7 @@ export const me = async (req, res) => {
       affiliation: user.affiliation || "",
       badges: user.badges || [],
       recentAttempts: (user.recentAttempts || []).slice(-10).reverse(),
+      systemWarnings: user.systemWarnings || [],
     });
   } catch (error) {
     console.log(error);
@@ -180,5 +181,33 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
+export const acknowledgeWarning = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.systemWarnings && user.systemWarnings.length > 0) {
+      const now = new Date();
+      user.systemWarnings.forEach((w) => {
+        if (!w.acknowledged) {
+          w.acknowledged = true;
+          w.acknowledgedAt = now;
+        }
+      });
+      await user.save();
+    }
+
+    return res.status(200).json({
+      message: "Disciplinary directive acknowledged",
+      warnings: user.systemWarnings || [],
+    });
+  } catch (error) {
+    console.error("Acknowledge warning error:", error);
+    return res.status(500).json({ message: "Failed to acknowledge warning" });
   }
 };

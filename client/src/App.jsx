@@ -5,6 +5,7 @@ import { ToastProvider } from './context/ToastContext';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import SystemWarningModal from './components/SystemWarningModal';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 
@@ -28,6 +29,7 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <div className="app-container">
+            <SystemWarningModal />
             <Navbar />
             <main className="main-content">
               <Routes>

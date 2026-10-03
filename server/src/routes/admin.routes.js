@@ -6,6 +6,10 @@ import {
   getAllUsers,
   updateUser,
   deleteUser,
+  getUserDossier,
+  issueUserWarning,
+  clearUserWarnings,
+  resetUserXp,
   getAllQuizzesAdmin,
   toggleQuizStatus,
   deleteQuizAdmin,
@@ -21,6 +25,10 @@ router.use(auth, requireAdmin);
 
 router.get("/stats", getSystemStats);
 router.get("/users", getAllUsers);
+router.get("/users/:userId/dossier", getUserDossier);
+router.post("/users/:userId/warn", issueUserWarning);
+router.post("/users/:userId/clear-warnings", clearUserWarnings);
+router.post("/users/:userId/reset-xp", resetUserXp);
 router.patch("/users/:userId", updateUser);
 router.delete("/users/:userId", deleteUser);
 

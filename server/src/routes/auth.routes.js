@@ -1,11 +1,11 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { login, me, register, updateProfile } from "../controllers/auth.controller.js";
+import { login, me, register, updateProfile, acknowledgeWarning } from "../controllers/auth.controller.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Specific rate limiter for password brute-force prevention
+// Specific rate limiter for password 
 const authlimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
@@ -18,5 +18,6 @@ router.post("/register", authlimiter, register);
 router.post("/login", authlimiter, login);
 router.get("/me", auth, me);
 router.patch("/profile", auth, updateProfile);
+router.post("/acknowledge-warning", auth, acknowledgeWarning);
 
 export default router;

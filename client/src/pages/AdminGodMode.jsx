@@ -19,6 +19,13 @@ import {
   ThumbsDown,
   AlertTriangle,
   Eye,
+  Activity,
+  Clock,
+  Send,
+  Ban,
+  History,
+  Shield,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function AdminGodMode() {
@@ -41,6 +48,13 @@ export default function AdminGodMode() {
   const [editLevel, setEditLevel] = useState(1);
   const [editRole, setEditRole] = useState('student');
   const [editStreak, setEditStreak] = useState(1);
+
+  // Forensic Dossier & Inquisition State
+  const [inspectingDossier, setInspectingDossier] = useState(null);
+  const [loadingDossier, setLoadingDossier] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+  const [warningSeverity, setWarningSeverity] = useState('strike');
+  const [sendingWarning, setSendingWarning] = useState(false);
 
   const loadData = async () => {
     try {
@@ -105,9 +119,85 @@ export default function AdminGodMode() {
     try {
       await adminApi.deleteUser(userId);
       showToast({ title: 'User Purged', message: `${name} was deleted.`, icon: '🗑️' });
+      if (inspectingDossier?.user?._id === userId) {
+        setInspectingDossier(null);
+      }
       loadData();
     } catch (err) {
       showToast({ title: 'Deletion failed', message: err.message, type: 'error' });
+    }
+  };
+
+  const handleOpenDossier = async (u) => {
+    setLoadingDossier(true);
+    try {
+      const res = await adminApi.getUserDossier(u._id);
+      setInspectingDossier(res.dossier);
+      const isSuspicious = res.dossier.telemetry?.isSuspiciousSpeed;
+      const pace = res.dossier.telemetry?.avgSecondsPerQuestion;
+      const attempts = res.dossier.telemetry?.totalAttempts;
+      setWarningMessage(
+        isSuspicious
+          ? `⚠️ PLATFORM FAIR-PLAY STRIKE 1:\nOur telemetry flagged irregular solve velocity (~${pace}s/question across ${attempts} challenges). The use of external LLM automation, ChatGPT speed-running, or answer scripts is barred on competitive leaderboards. Continued violations will result in permanent database deletion and forfeiture of all ranks.`
+          : `⚠️ PLATFORM GOVERNANCE WARNING:\nYour account activity has been flagged for administrative review. Please adhere strictly to competitive fair-play standards.`
+      );
+      setWarningSeverity(isSuspicious ? 'strike' : 'warning');
+    } catch (err) {
+      showToast({ title: 'Failed to load dossier', message: err.message, type: 'error' });
+    } finally {
+      setLoadingDossier(false);
+    }
+  };
+
+  const handleIssueWarning = async () => {
+    if (!inspectingDossier || !warningMessage.trim()) return;
+    setSendingWarning(true);
+    try {
+      const res = await adminApi.issueWarning(inspectingDossier.user._id, {
+        message: warningMessage.trim(),
+        severity: warningSeverity,
+      });
+      showToast({
+        title: 'Directive Dispatched',
+        message: res.message,
+        icon: '🚨',
+        type: 'badge',
+      });
+      const updated = await adminApi.getUserDossier(inspectingDossier.user._id);
+      setInspectingDossier(updated.dossier);
+      loadData();
+    } catch (err) {
+      showToast({ title: 'Dispatch failed', message: err.message, type: 'error' });
+    } finally {
+      setSendingWarning(false);
+    }
+  };
+
+  const handleClearWarnings = async () => {
+    if (!inspectingDossier) return;
+    if (!window.confirm(`Pardon and clear all disciplinary strikes for ${inspectingDossier.user.name}?`)) return;
+    try {
+      await adminApi.clearWarnings(inspectingDossier.user._id);
+      showToast({ title: 'Record Cleared', message: 'Disciplinary warnings pardoned.', icon: '🕊️' });
+      const updated = await adminApi.getUserDossier(inspectingDossier.user._id);
+      setInspectingDossier(updated.dossier);
+      loadData();
+    } catch (err) {
+      showToast({ title: 'Action failed', message: err.message, type: 'error' });
+    }
+  };
+
+  const handleResetUserXp = async (targetXp = 0) => {
+    if (!inspectingDossier) return;
+    if (!window.confirm(`Reset ${inspectingDossier.user.name}'s XP to ${targetXp} and recalibrate their leaderboard ranking?`)) return;
+    try {
+      await adminApi.resetUserXp(inspectingDossier.user._id, { newXp: targetXp });
+      showToast({ title: 'XP Calibrated', message: `XP adjusted to ${targetXp}.`, icon: '⚡' });
+      const updated = await adminApi.getUserDossier(inspectingDossier.user._id);
+      setInspectingDossier(updated.dossier);
+      loadData();
+    } catch (err) {
+      showToast({ title: 'Action failed', message: err.message, type: 'error' });
     }
   };
 
@@ -320,7 +410,42 @@ export default function AdminGodMode() {
 
                   return (
                     <tr key={u._id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '14px 18px', fontWeight: 600 }}>{u.name}</td>
+                      <td style={{ padding: '14px 18px', fontWeight: 600 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDossier(u)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              fontWeight: 600,
+                              color: '#fff',
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              textDecoration: 'underline dotted rgba(255,255,255,0.4)',
+                            }}
+                            title="Click to inspect player dossier & telemetry"
+                          >
+                            {u.name}
+                          </button>
+                          {u.systemWarnings && u.systemWarnings.length > 0 && (
+                            <span
+                              className="badge"
+                              style={{
+                                fontSize: '0.62rem',
+                                padding: '2px 6px',
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                color: '#ef4444',
+                                border: '1px solid #ef4444',
+                              }}
+                              title={`${u.systemWarnings.length} active warning(s)`}
+                            >
+                              ⚠️ {u.systemWarnings.length} {u.systemWarnings.length === 1 ? 'STRIKE' : 'STRIKES'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="mono" style={{ padding: '14px 18px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                         {u.email}
                       </td>
@@ -384,6 +509,24 @@ export default function AdminGodMode() {
                       </td>
                       <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDossier(u)}
+                            className="btn btn-secondary btn-sm"
+                            style={{
+                              padding: '4px 8px',
+                              color: u.systemWarnings && u.systemWarnings.length > 0 ? '#ef4444' : 'var(--lime)',
+                              borderColor: u.systemWarnings && u.systemWarnings.length > 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(200, 255, 55, 0.3)',
+                              background: u.systemWarnings && u.systemWarnings.length > 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(200, 255, 55, 0.05)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            title="Inspect Player Forensic Dossier"
+                          >
+                            <ShieldAlert size={13} />
+                            <span>Dossier</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(u)}
@@ -924,6 +1067,426 @@ export default function AdminGodMode() {
               >
                 Delete Question
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forensic Dossier & Inquisition Modal */}
+      {inspectingDossier && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.88)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '880px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              background: '#0d1017',
+              border: inspectingDossier.telemetry?.isSuspiciousSpeed ? '1.5px solid #ef4444' : '1px solid var(--border)',
+              boxShadow: inspectingDossier.telemetry?.isSuspiciousSpeed ? '0 0 50px rgba(239, 68, 68, 0.25)' : '0 20px 40px rgba(0,0,0,0.6)',
+              padding: '28px',
+              borderRadius: '16px',
+            }}
+          >
+            {/* Dossier Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '12px',
+                    background: inspectingDossier.telemetry?.isSuspiciousSpeed ? 'rgba(239,68,68,0.2)' : 'rgba(200,255,55,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: inspectingDossier.telemetry?.isSuspiciousSpeed ? '#ef4444' : 'var(--lime)',
+                    fontSize: '1.3rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  {inspectingDossier.user.name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="mono" style={{ fontSize: '0.72rem', letterSpacing: '1px', color: '#94a3b8', textTransform: 'uppercase' }}>
+                      SECURITY DOSSIER // UID: {inspectingDossier.user._id?.slice(-8)}
+                    </span>
+                    {inspectingDossier.telemetry?.isSuspiciousSpeed && (
+                      <span className="badge" style={{ background: '#ef4444', color: '#fff', fontSize: '0.65rem', fontWeight: 800 }}>
+                        🚨 ANOMALOUS SOLVE VELOCITY
+                      </span>
+                    )}
+                  </div>
+                  <h2 style={{ margin: '4px 0 0 0', fontSize: '1.35rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {inspectingDossier.user.name}
+                    {inspectingDossier.user.country === 'Ethiopia' && <span title="Ethiopian Developer">🇪🇹</span>}
+                  </h2>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                    <span>{inspectingDossier.user.email}</span>
+                    <span>•</span>
+                    <span style={{ textTransform: 'capitalize' }}>Role: {inspectingDossier.user.role}</span>
+                    <span>•</span>
+                    <span>Joined: {new Date(inspectingDossier.user.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setInspectingDossier(null)}
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '6px 12px' }}
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Telemetry Metric Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  ACCURACY & VOLUME
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--lime)' }}>
+                  {inspectingDossier.telemetry.accuracy}
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                  {inspectingDossier.telemetry.totalScore} / {inspectingDossier.telemetry.totalQuestionsAttempted} answers ({inspectingDossier.telemetry.totalAttempts} challenges)
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  XP & STANDING
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc' }}>
+                  {inspectingDossier.user.xp?.toLocaleString()} XP
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                  Level {inspectingDossier.user.level} • Streak: {inspectingDossier.user.streak || 0}d
+                </span>
+              </div>
+
+              <div
+                style={{
+                  background: inspectingDossier.telemetry.isSuspiciousSpeed ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.02)',
+                  border: inspectingDossier.telemetry.isSuspiciousSpeed ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '14px',
+                }}
+              >
+                <span style={{ fontSize: '0.72rem', color: inspectingDossier.telemetry.isSuspiciousSpeed ? '#ef4444' : 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: inspectingDossier.telemetry.isSuspiciousSpeed ? 700 : 400 }}>
+                  SOLVE VELOCITY
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: inspectingDossier.telemetry.isSuspiciousSpeed ? '#ef4444' : '#38bdf8' }}>
+                  ~{inspectingDossier.telemetry.avgSecondsPerQuestion || '--'}s / question
+                </div>
+                <span style={{ fontSize: '0.75rem', color: inspectingDossier.telemetry.isSuspiciousSpeed ? '#fca5a5' : '#94a3b8' }}>
+                  {inspectingDossier.telemetry.avgGapSeconds ? `Avg ~${inspectingDossier.telemetry.avgGapSeconds}s / challenge` : 'First session'}
+                </span>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  DISCIPLINARY RECORD
+                </span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: inspectingDossier.warnings?.length > 0 ? '#ef4444' : '#10b981' }}>
+                  {inspectingDossier.warnings?.length || 0} Strikes
+                </div>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                  {inspectingDossier.warnings?.filter(w => !w.acknowledged).length || 0} unacknowledged
+                </span>
+              </div>
+            </div>
+
+            {/* Authoritarian Disciplinary Command Station */}
+            <div
+              style={{
+                background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, rgba(0,0,0,0.3) 100%)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: '24px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldAlert size={18} color="#ef4444" />
+                  <h3 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                    Dispatch Authoritarian Governance Directive / Warning
+                  </h3>
+                </div>
+                {inspectingDossier.warnings?.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearWarnings}
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '3px 8px', color: '#10b981' }}
+                  >
+                    Pardon / Clear All Strikes
+                  </button>
+                )}
+              </div>
+
+              {/* Severity selection & quick presets */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>SEVERITY:</span>
+                {['warning', 'strike', 'final_warning'].map((sev) => (
+                  <button
+                    key={sev}
+                    type="button"
+                    onClick={() => setWarningSeverity(sev)}
+                    className="btn btn-sm"
+                    style={{
+                      fontSize: '0.72rem',
+                      padding: '3px 8px',
+                      background: warningSeverity === sev ? (sev === 'warning' ? '#f59e0b' : '#ef4444') : 'rgba(255,255,255,0.05)',
+                      color: warningSeverity === sev ? '#000' : 'inherit',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {sev.replace('_', ' ')}
+                  </button>
+                ))}
+
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '12px' }}>PRESETS:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWarningSeverity('strike');
+                    setWarningMessage(
+                      `⚠️ PLATFORM FAIR-PLAY STRIKE 1:\nOur telemetry flagged irregular solve velocity (~${inspectingDossier.telemetry?.avgSecondsPerQuestion || 12}s/question across ${inspectingDossier.telemetry?.totalAttempts} challenges). External LLM automation, ChatGPT speed-running, or answer scripts are barred on competitive leaderboards. Continued violations will result in permanent database deletion and forfeiture of all ranks.`
+                    );
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                >
+                  ⚡ AI Velocity Strike
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWarningSeverity('warning');
+                    setWarningMessage(
+                      `⚠️ FAIR PLAY & REPUTATION NOTICE:\nYour account activity has triggered anti-cheat rate warnings. Dev Arena is a competitive arena designed for authentic developer skill. Please complete challenges at normal problem-solving speeds.`
+                    );
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                >
+                  ⚖️ Fair Play Notice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWarningSeverity('final_warning');
+                    setWarningMessage(
+                      `🚨 FINAL EXPULSION NOTICE:\nThis is your absolute final warning. Continued unfair-play telemetry will result in immediate database purging, leaderboard removal, and credential disqualification.`
+                    );
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#ef4444' }}
+                >
+                  🚨 Final Expulsion Notice
+                </button>
+              </div>
+
+              <textarea
+                rows={4}
+                value={warningMessage}
+                onChange={(e) => setWarningMessage(e.target.value)}
+                placeholder="Write the exact directive or warning message that will be forced onto the player's screen upon login..."
+                style={{
+                  width: '100%',
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  fontSize: '0.88rem',
+                  color: '#f8fafc',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  marginBottom: '12px',
+                }}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={handleIssueWarning}
+                    disabled={sendingWarning || !warningMessage.trim()}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      background: warningSeverity === 'warning' ? '#f59e0b' : '#ef4444',
+                      color: '#000',
+                      border: 'none',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Send size={14} />
+                    {sendingWarning ? 'Dispatching...' : `Dispatch ${warningSeverity.toUpperCase()}`}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleResetUserXp(0)}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      color: '#f59e0b',
+                      borderColor: 'rgba(245, 158, 11, 0.4)',
+                      background: 'rgba(245, 158, 11, 0.05)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                    title="Strip unearned XP and reset leaderboard position"
+                  >
+                    <Zap size={13} />
+                    Reset XP to 0
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteUser(inspectingDossier.user._id, inspectingDossier.user.name)}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      color: '#ef4444',
+                      borderColor: 'rgba(239, 68, 68, 0.4)',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                    title="Completely purge this account"
+                  >
+                    <Trash2 size={13} />
+                    Terminate Account
+                  </button>
+                </div>
+              </div>
+
+              {/* Existing Disciplinary Warnings Log */}
+              {inspectingDossier.warnings && inspectingDossier.warnings.length > 0 && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '12px' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', marginBottom: '6px', fontWeight: 700 }}>
+                    DISCIPLINARY RECORD ON FILE ({inspectingDossier.warnings.length}):
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {inspectingDossier.warnings.map((w, wIdx) => (
+                      <div
+                        key={wIdx}
+                        style={{
+                          fontSize: '0.78rem',
+                          background: 'rgba(0,0,0,0.4)',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          borderLeft: w.severity === 'warning' ? '3px solid #f59e0b' : '3px solid #ef4444',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <span style={{ fontWeight: 700, color: w.severity === 'warning' ? '#f59e0b' : '#ef4444', textTransform: 'uppercase', marginRight: '8px' }}>
+                            [{w.severity}]
+                          </span>
+                          <span style={{ color: '#e2e8f0' }}>{w.message}</span>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: w.acknowledged ? '#10b981' : '#f59e0b', whiteSpace: 'nowrap', marginLeft: '12px' }}>
+                          {w.acknowledged ? '✓ Acknowledged' : '⏳ Pending Display'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Forensic Timeline of All Attempts */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <History size={16} color="var(--lime)" />
+                  <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc' }}>
+                    Complete Attempt Timeline ({inspectingDossier.attempts?.length || 0})
+                  </h3>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Chronological Sequence (Latest First)
+                </span>
+              </div>
+
+              <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ padding: '8px 12px' }}>#</th>
+                      <th style={{ padding: '8px 12px' }}>CHALLENGE</th>
+                      <th style={{ padding: '8px 12px' }}>SCORE</th>
+                      <th style={{ padding: '8px 12px' }}>XP</th>
+                      <th style={{ padding: '8px 12px' }}>SOLVE GAP</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'right' }}>DATE / TIME</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inspectingDossier.attempts?.map((att, attIdx) => (
+                      <tr key={attIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td className="mono" style={{ padding: '8px 12px', color: '#64748b' }}>
+                          {inspectingDossier.attempts.length - attIdx}
+                        </td>
+                        <td style={{ padding: '8px 12px', fontWeight: 500, color: '#f8fafc' }}>
+                          {att.quizTitle}
+                        </td>
+                        <td className="mono" style={{ padding: '8px 12px', color: att.percentage === 100 ? 'var(--lime)' : '#f59e0b' }}>
+                          {att.score}/{att.totalQuestions} ({att.percentage}%)
+                        </td>
+                        <td className="mono" style={{ padding: '8px 12px', color: 'var(--lime)' }}>
+                          +{att.xpEarned}
+                        </td>
+                        <td className="mono" style={{ padding: '8px 12px' }}>
+                          {att.gapSeconds !== null ? (
+                            <span
+                              style={{
+                                color: att.gapSeconds < 30 ? '#ef4444' : att.gapSeconds < 60 ? '#f59e0b' : '#94a3b8',
+                                fontWeight: att.gapSeconds < 30 ? 700 : 400,
+                              }}
+                            >
+                              +{att.gapSeconds}s {att.gapSeconds < 30 && '⚡'}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#64748b' }}>First in run</span>
+                          )}
+                        </td>
+                        <td className="mono" style={{ padding: '8px 12px', textAlign: 'right', fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          {new Date(att.date).toLocaleDateString()} {new Date(att.date).toLocaleTimeString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
