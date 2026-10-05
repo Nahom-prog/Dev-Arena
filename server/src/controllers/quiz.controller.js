@@ -106,8 +106,10 @@ export const getAllQuizzes = async (req, res) => {
 
     if (isAllTagsNoSearch) {
       // Interleave technologies so the initial view is diverse across stacks rather than monolithic
+      // Cap at 200 documents to prevent memory overload at scale
       const allMatching = await Quiz.find(filter)
         .populate("teacherId", "name level")
+        .limit(200)
         .lean();
 
       total = allMatching.length;
@@ -345,11 +347,19 @@ export const submitQuiz = async (req, res) => {
     const totalQuestions = questions.length;
     const percentage = Math.round((score / totalQuestions) * 100);
 
-    // Check if this quiz is today's daily challenge
-    const allQuizzes = await Quiz.find({ status: "published" }).sort({ createdAt: 1 });
-    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    const dailyIndex = allQuizzes.length > 0 ? daysSinceEpoch % allQuizzes.length : -1;
-    const isTodayDaily = dailyIndex >= 0 && allQuizzes[dailyIndex]._id.toString() === quiz._id.toString();
+    // Check if this quiz is today's daily challenge (efficient: count + skip instead of loading all)
+    const publishedCount = await Quiz.countDocuments({ status: "published" });
+    let isTodayDaily = false;
+    if (publishedCount > 0) {
+      const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+      const dailyIndex = daysSinceEpoch % publishedCount;
+      const dailyQuiz = await Quiz.findOne({ status: "published" })
+        .sort({ createdAt: 1 })
+        .skip(dailyIndex)
+        .select("_id")
+        .lean();
+      isTodayDaily = dailyQuiz && dailyQuiz._id.toString() === quiz._id.toString();
+    }
 
     // XP calculation with difficulty multiplier (or 2.0x daily bonus)
     const multipliers = {
@@ -420,6 +430,11 @@ export const submitQuiz = async (req, res) => {
           }
         }
         user.lastDailyCompletedDate = now;
+      }
+
+      // Cap recent attempts to prevent User document bloat (keep last 50)
+      if (user.recentAttempts.length >= 50) {
+        user.recentAttempts = user.recentAttempts.slice(-49);
       }
 
       // Add to recent attempts
@@ -529,6 +544,10 @@ export const voteQuestion = async (req, res) => {
       } else {
         question.downvotes = (question.downvotes || 0) + 1;
       }
+      // Cap voters array at 500 to prevent unbounded document growth
+      if (question.voters.length >= 500) {
+        return res.status(429).json({ message: "Voting capacity reached for this question." });
+      }
       question.voters.push({ userId, voteType });
     }
 
@@ -575,11 +594,15 @@ export const reportQuestion = async (req, res) => {
     const cleanReason = typeof reason === "string" ? reason.trim().slice(0, 300) : "User reported question issue";
 
     question.reportsCount = (question.reportsCount || 0) + 1;
-    question.reports.push({
-      userId,
-      reason: cleanReason,
-      createdAt: new Date(),
-    });
+
+    // Cap stored reports at 100 to prevent document bloat (counter still tracks total)
+    if (question.reports.length < 100) {
+      question.reports.push({
+        userId,
+        reason: cleanReason,
+        createdAt: new Date(),
+      });
+    }
 
     await question.save();
 

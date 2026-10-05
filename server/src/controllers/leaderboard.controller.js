@@ -34,7 +34,7 @@ export const getLeaderboard = async (req, res) => {
         affiliation: u.affiliation || "",
         xp: u.xp || 0,
         level: u.level || 1,
-        streak: u.streak || 1,
+        streak: u.streak || 0,
         quizzesTaken: u.quizzesTaken || 0,
         accuracy: `${accuracy}%`,
         badgeCount: (u.badges || []).length,

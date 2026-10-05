@@ -44,7 +44,7 @@ export async function getSystemStats(req, res) {
  */
 export async function getAllUsers(req, res) {
   try {
-    const { search } = req.query;
+    const { search, page: rawPage, limit: rawLimit } = req.query;
     const filter = {};
 
     if (search && search.trim()) {
@@ -55,12 +55,20 @@ export async function getAllUsers(req, res) {
       ];
     }
 
-    const users = await User.find(filter)
-      .select("-passwordHash")
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const page = Math.max(1, parseInt(rawPage) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 50));
+    const skip = (page - 1) * limit;
 
-    return res.json({ users });
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("-passwordHash")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      User.countDocuments(filter),
+    ]);
+
+    return res.json({ users, page, limit, total, hasMore: skip + users.length < total });
   } catch (err) {
     console.error("Admin get users error:", err);
     return res.status(500).json({ message: "Failed to load users" });
@@ -334,11 +342,21 @@ export async function resetUserXp(req, res) {
  */
 export async function getAllQuizzesAdmin(req, res) {
   try {
-    const quizzes = await Quiz.find()
-      .populate("teacherId", "name email")
-      .sort({ createdAt: -1 });
+    const { page: rawPage, limit: rawLimit } = req.query;
+    const page = Math.max(1, parseInt(rawPage) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(rawLimit) || 50));
+    const skip = (page - 1) * limit;
 
-    return res.json({ quizzes });
+    const [quizzes, total] = await Promise.all([
+      Quiz.find()
+        .populate("teacherId", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Quiz.countDocuments(),
+    ]);
+
+    return res.json({ quizzes, page, limit, total, hasMore: skip + quizzes.length < total });
   } catch (err) {
     console.error("Admin get quizzes error:", err);
     return res.status(500).json({ message: "Failed to load quizzes" });

@@ -18,6 +18,11 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    // Password strength gate
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
     // Security Hardening: Never allow public registration to claim admin or teacher roles.
     const assignedRole = role && ["developer", "student"].includes(role)
       ? role
@@ -81,9 +86,9 @@ export const login = async (req, res) => {
     const token = createToken(user);
 
     const canCreateQuiz =
-      (user.level || 1) >= 3 ||
-      (user.quizzesTaken || 0) >= 3 ||
+      ((user.level || 1) >= 3 && (user.quizzesTaken || 0) >= 3) ||
       user.role === "admin" ||
+      user.role === "author" ||
       user.role === "teacher";
 
     return res.json({
@@ -96,7 +101,7 @@ export const login = async (req, res) => {
         role: user.role,
         xp: user.xp || 0,
         level: user.level || 1,
-        streak: user.streak || 1,
+        streak: user.streak || 0,
         quizzesTaken: user.quizzesTaken || 0,
         quizzesCreated: user.quizzesCreated || 0,
         badges: user.badges || [],
@@ -140,7 +145,7 @@ export const me = async (req, res) => {
       role: user.role,
       xp: user.xp || 0,
       level: user.level || 1,
-      streak: user.streak || 1,
+      streak: user.streak || 0,
       quizzesTaken: user.quizzesTaken || 0,
       quizzesCreated: user.quizzesCreated || 0,
       totalScore: user.totalScore || 0,

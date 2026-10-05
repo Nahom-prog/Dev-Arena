@@ -42,6 +42,7 @@ const quizSchema = new mongoose.Schema(
 
 quizSchema.index({ status: 1, createdAt: -1 });
 quizSchema.index({ tags: 1 });
+quizSchema.index({ teacherId: 1 });
 
 const Quiz = mongoose.model("Quiz", quizSchema);
 

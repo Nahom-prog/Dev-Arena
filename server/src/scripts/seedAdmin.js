@@ -25,7 +25,7 @@ export async function ensureAdminExists() {
         role: "admin",
         level: 1,
         xp: 0,
-        streak: 1,
+        streak: 0,
       });
       console.log(`[GOD MODE] Master admin (${ADMIN_EMAIL}) created successfully.`);
     }
